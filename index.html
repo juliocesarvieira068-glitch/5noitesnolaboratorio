@@ -1,0 +1,2295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinco Noites no Laboratório Alquímico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Share+Tech+Mono&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --alchemy-gold: #d4af37;
+            --toxic-green: #10b981;
+            --blood-red: #dc2626;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #e5e7eb;
+            overflow: hidden;
+            user-select: none;
+        }
+        .font-alchemy {
+            font-family: 'Cinzel Decorative', cursive;
+        }
+        .font-mono-tech {
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Efeito CRT / VHS de Câmera de Segurança */
+        .crt-overlay {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.35) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.95; }
+            5% { opacity: 0.85; }
+            10% { opacity: 0.98; }
+            15% { opacity: 0.7; }
+            20% { opacity: 0.99; }
+            55% { opacity: 0.96; }
+            60% { opacity: 0.6; }
+            65% { opacity: 0.98; }
+            100% { opacity: 0.94; }
+        }
+        .flicker-anim {
+            animation: flicker 4s infinite;
+        }
+
+        @keyframes pulse-danger {
+            0%, 100% { box-shadow: inset 0 0 40px rgba(220, 38, 38, 0.1); }
+            50% { box-shadow: inset 0 0 110px rgba(220, 38, 38, 0.65); }
+        }
+        .danger-vignette {
+            animation: pulse-danger 1.5s infinite;
+        }
+
+        @keyframes jumpscare-shake {
+            0% { transform: translate(0, 0) scale(1); }
+            15% { transform: translate(-25px, 15px) scale(1.15) rotate(-4deg); }
+            30% { transform: translate(25px, -20px) scale(1.25) rotate(4deg); }
+            45% { transform: translate(-20px, -15px) scale(1.35) rotate(-6deg); }
+            60% { transform: translate(20px, 20px) scale(1.4) rotate(5deg); }
+            75% { transform: translate(-15px, 10px) scale(1.3) rotate(-3deg); }
+            100% { transform: translate(0, 0) scale(1.35); }
+        }
+        .jumpscare-active {
+            animation: jumpscare-shake 0.35s infinite;
+        }
+
+        /* Lanterna em 1ª pessoa */
+        #flashlight-mask {
+            pointer-events: none;
+            transition: background 0.05s ease;
+        }
+
+        /* Scrollbar customizada para o Grimório */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+
+        /* Estilo de Impressão para o Relatório do Professor */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #report-modal, #report-modal * {
+                visibility: visible;
+            }
+            #report-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-black select-none">
+
+    <!-- OVERLAY CRT GLOBAL -->
+    <div class="crt-overlay fixed inset-0 z-50"></div>
+
+    <!-- ==========================================
+         TELA INICIAL / MENU PRINCIPAL
+    =========================================== -->
+    <div id="menu-screen" class="fixed inset-0 z-40 flex flex-col justify-between p-4 md:p-8 bg-gradient-to-b from-black via-stone-950 to-black overflow-y-auto">
+        <!-- Fundo decorativo SVG Alquímico -->
+        <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none overflow-hidden">
+            <svg class="w-[550px] h-[550px] animate-spin" style="animation-duration: 90s;" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="90" fill="none" stroke="#d4af37" stroke-width="1.5"/>
+                <circle cx="100" cy="100" r="78" fill="none" stroke="#d4af37" stroke-width="0.7" stroke-dasharray="4 2"/>
+                <polygon points="100,10 178,145 22,145" fill="none" stroke="#d4af37" stroke-width="1.2"/>
+                <polygon points="100,190 178,55 22,55" fill="none" stroke="#d4af37" stroke-width="1.2"/>
+                <rect x="45" y="45" width="110" height="110" fill="none" stroke="#d4af37" stroke-width="1"/>
+                <circle cx="100" cy="100" r="32" fill="none" stroke="#d4af37" stroke-width="1.5"/>
+            </svg>
+        </div>
+
+        <!-- Cabeçalho Institucional: Escola Céam & Prof. Júlio César -->
+        <div class="relative z-10 flex flex-wrap justify-between items-start gap-4 border-b border-stone-800/80 pb-4">
+            <div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="px-3 py-1 bg-amber-950/90 border border-amber-500 text-amber-300 text-xs font-mono-tech rounded-md tracking-wider uppercase font-bold shadow">
+                        <i class="fas fa-graduation-cap mr-1"></i> ESCOLA CÉAM • PROF. JÚLIO CÉSAR
+                    </span>
+                    <span class="px-3 py-1 bg-red-950/80 border border-red-700 text-red-400 text-xs font-mono-tech rounded-md tracking-widest uppercase">
+                        <i class="fas fa-video mr-1 animate-pulse"></i> CIÊNCIAS - 6º ANO ENS. FUNDAMENTAL
+                    </span>
+                </div>
+                <h1 class="font-alchemy text-2xl sm:text-4xl md:text-5xl text-amber-500 mt-2 drop-shadow-[0_4px_15px_rgba(212,175,55,0.4)]">
+                    Cinco Noites no Laboratório Alquímico
+                </h1>
+                <p class="text-stone-400 font-mono-tech text-xs md:text-sm mt-0.5">
+                    Alquimia • Substâncias Simples e Compostas • Misturas e Separação • Tabela Periódica
+                </p>
+            </div>
+
+            <!-- Identificação do Aluno & Botões Superiores -->
+            <div class="flex flex-wrap items-center gap-2 bg-stone-900/90 border border-stone-700 p-2.5 rounded-xl">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-user-astronaut text-amber-400 text-sm pl-1"></i>
+                    <input id="student-name-input" type="text" placeholder="Nome do Aluno(a)..." oninput="saveStudentInfo()" class="bg-black border border-stone-700 focus:border-amber-500 rounded px-2.5 py-1 text-xs font-mono-tech text-white outline-none w-36 sm:w-44">
+                    <input id="student-class-input" type="text" placeholder="Turma (Ex: 6º A)" oninput="saveStudentInfo()" class="bg-black border border-stone-700 focus:border-amber-500 rounded px-2 py-1 text-xs font-mono-tech text-white outline-none w-28">
+                </div>
+                <button onclick="toggleGrimoire()" class="px-3 py-1.5 bg-amber-950/70 hover:bg-amber-900 border border-amber-600/60 text-amber-300 rounded-lg font-mono-tech text-xs flex items-center gap-1.5 transition">
+                    <i class="fas fa-book-dead text-amber-400"></i> Grimório 6º Ano
+                </button>
+                <button onclick="openReportModal()" class="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/60 text-emerald-300 rounded-lg font-mono-tech text-xs flex items-center gap-1.5 transition">
+                    <i class="fas fa-file-signature text-emerald-400"></i> Relatório p/ Prof. Júlio
+                </button>
+            </div>
+        </div>
+
+        <!-- Seleção de Fases / Noites + Botão Custom Night -->
+        <div class="relative z-10 my-auto max-w-6xl w-full mx-auto py-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+                <h2 class="text-xs font-mono-tech uppercase tracking-widest text-stone-300">
+                    <i class="fas fa-flask text-amber-500 mr-1"></i> Selecione a Noite de Vigília (5 Fases + Modo Custom Night):
+                </h2>
+                <button onclick="openCustomNightModal()" class="px-4 py-1.5 bg-purple-950 hover:bg-purple-800 border-2 border-purple-500 text-purple-200 rounded-lg font-mono-tech text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-[0_0_15px_rgba(168,85,247,0.4)] transition">
+                    <i class="fas fa-sliders-h text-purple-400"></i> Modo Custom Night (Noite 6 • IA 0 a 20)
+                </button>
+            </div>
+            <div id="nights-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <!-- Gerado via JS -->
+            </div>
+        </div>
+
+        <!-- Rodapé do Menu: Como Jogar -->
+        <div class="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-3 bg-stone-900/85 border border-stone-800 p-3.5 rounded-xl text-xs text-stone-300">
+            <div class="flex items-start gap-2.5">
+                <i class="fas fa-eye text-amber-500 text-base mt-0.5"></i>
+                <div>
+                    <strong class="text-white block">1. Visão em 1ª Pessoa & Câmeras</strong>
+                    Vire para a Porta Esquerda [A], Bancada [S] ou Duto Direito [D]. Abra o Monitor [W/Espaço] para vigiar os cientistas e ler dicas nas paredes!
+                </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+                <i class="fas fa-phone-volume text-purple-400 text-base mt-0.5"></i>
+                <div>
+                    <strong class="text-white block">2. Defesa FNAF & Phone Guy Alquímico</strong>
+                    Ouça a gravação do Guardião Noturno no início de cada noite! Se um cientista chegar na porta ou duto, tranque rápido sem zerar a Pilha de Volta.
+                </div>
+            </div>
+            <div class="flex items-start gap-2.5">
+                <i class="fas fa-vial text-emerald-500 text-base mt-0.5"></i>
+                <div>
+                    <strong class="text-white block">3. Experimentos Práticos de 6º Ano</strong>
+                    Complete 3 experimentos na bancada por noite (Separação de Misturas, Substâncias Simples/Compostas e Tabela Periódica) para chegar às 06:00 AM!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL DE CONFIGURAÇÃO DA CUSTOM NIGHT (IA 0 A 20)
+    =========================================== -->
+    <div id="custom-night-modal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="max-w-3xl w-full bg-stone-950 border-2 border-purple-500 rounded-2xl p-6 shadow-[0_0_60px_rgba(168,85,247,0.3)] flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-stone-800 pb-3">
+                <div>
+                    <span class="text-[10px] font-mono-tech uppercase px-2 py-0.5 bg-purple-950 text-purple-300 border border-purple-700 rounded">DESAFIO SUPREMO • ESCOLA CÉAM</span>
+                    <h2 class="font-alchemy text-2xl text-white mt-1">Custom Night — Laboratório em Caos</h2>
+                </div>
+                <button onclick="closeCustomNightModal()" class="px-3 py-1 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded font-mono-tech text-xs">
+                    FECHAR
+                </button>
+            </div>
+
+            <p class="text-xs text-stone-300 font-mono-tech">
+                Ajuste o nível de Inteligência Artificial (0 a 20) de cada um dos 5 cientistas históricos! Na Custom Night, todos os cientistas com IA &gt; 0 atacarão ao mesmo tempo enquanto você resolve 4 desafios mistos de Química do 6º Ano!
+            </p>
+
+            <div id="custom-ai-grid" class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <!-- Gerado via JS -->
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-800">
+                <div class="flex gap-2">
+                    <button onclick="setAllCustomAI(5)" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded font-mono-tech text-xs">Modo Normal (Todos 5)</button>
+                    <button onclick="setAllCustomAI(10)" class="px-3 py-1.5 bg-amber-950 hover:bg-amber-900 border border-amber-600 text-amber-300 rounded font-mono-tech text-xs">Modo Difícil (Todos 10)</button>
+                    <button onclick="setAllCustomAI(20)" class="px-3 py-1.5 bg-red-950 hover:bg-red-900 border border-red-600 text-red-300 rounded font-mono-tech text-xs font-bold">MODO 5/20 INSANO!</button>
+                </div>
+                <button onclick="startCustomNight()" class="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-mono-tech font-bold text-xs uppercase rounded-xl shadow-lg">
+                    Iniciar Custom Night <i class="fas fa-play ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         MODAL DE RELATÓRIO DE DESEMPENHO (PARA O PROF. JÚLIO CÉSAR)
+    =========================================== -->
+    <div id="report-modal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="max-w-3xl w-full max-h-[90vh] bg-stone-950 border-2 border-emerald-500 rounded-2xl p-6 shadow-2xl flex flex-col justify-between overflow-y-auto">
+            <div>
+                <div class="flex items-start justify-between border-b border-stone-800 pb-4">
+                    <div>
+                        <div class="text-xs font-mono-tech text-emerald-400 uppercase font-bold">ESCOLA CÉAM • DISCIPLINA DE CIÊNCIAS (6º ANO)</div>
+                        <h2 class="font-alchemy text-2xl text-white mt-0.5">Relatório de Desempenho Alquímico e Químico</h2>
+                        <p class="text-xs font-mono-tech text-stone-400">Professor Responsável: <strong class="text-amber-400">Prof. Júlio César</strong></p>
+                    </div>
+                    <button onclick="closeReportModal()" class="no-print px-3 py-1 bg-red-950 hover:bg-red-900 text-red-300 border border-red-700 rounded font-mono-tech text-xs">
+                        FECHAR
+                    </button>
+                </div>
+
+                <!-- Dados do Aluno -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4 bg-stone-900/90 border border-stone-700 p-3.5 rounded-xl text-xs font-mono-tech">
+                    <div>
+                        <span class="text-stone-400 block">ALUNO(A):</span>
+                        <strong id="rep-student-name" class="text-white text-sm">Não informado</strong>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 block">TURMA / SÉRIE:</span>
+                        <strong id="rep-student-class" class="text-amber-400 text-sm">6º Ano - Escola Céam</strong>
+                    </div>
+                    <div>
+                        <span class="text-stone-400 block">PONTUAÇÃO GERAL:</span>
+                        <strong id="rep-total-score" class="text-emerald-400 text-base">0 pts</strong>
+                    </div>
+                </div>
+
+                <!-- Tabela de Fases e Conteúdos Avaliados -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse font-mono-tech text-xs">
+                        <thead>
+                            <tr class="border-b border-stone-700 text-amber-400 uppercase">
+                                <th class="py-2 px-2">Fase / Noite</th>
+                                <th class="py-2 px-2">Conteúdo do 6º Ano</th>
+                                <th class="py-2 px-2">Status</th>
+                                <th class="py-2 px-2">Acertos / Erros</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rep-table-body" class="divide-y divide-stone-800 text-stone-200">
+                            <!-- Gerado via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="rep-copy-feedback" class="hidden mt-3 p-2 bg-emerald-950 border border-emerald-500 text-emerald-300 text-xs font-mono-tech rounded text-center">
+                    Resumo copiado para a área de transferência! Agora é só colar e enviar ao Prof. Júlio César.
+                </div>
+            </div>
+
+            <div class="no-print flex flex-wrap items-center justify-end gap-3 mt-6 pt-4 border-t border-stone-800">
+                <button onclick="copyReportText()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-black font-mono-tech font-bold text-xs uppercase rounded-lg flex items-center gap-1.5">
+                    <i class="fas fa-copy"></i> Copiar Resumo em Texto
+                </button>
+                <button onclick="window.print()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-black font-mono-tech font-bold text-xs uppercase rounded-lg flex items-center gap-1.5">
+                    <i class="fas fa-print"></i> Imprimir / Salvar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         BRIEFING DE INÍCIO DE NOITE
+    =========================================== -->
+    <div id="briefing-screen" class="hidden fixed inset-0 z-40 bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-xl w-full border border-amber-700/50 bg-stone-950 p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+            <div id="briefing-night-badge" class="text-amber-500 font-mono-tech text-sm tracking-widest uppercase mb-1">12:00 AM - 1ª NOITE</div>
+            <h2 id="briefing-title" class="font-alchemy text-3xl text-white mb-4">A Cripta de Paracelso</h2>
+            
+            <div class="flex items-center gap-4 bg-red-950/30 border border-red-800/50 p-3 rounded-lg mb-4 text-left">
+                <div id="briefing-stalker-avatar" class="w-16 h-16 rounded-full bg-stone-900 border border-red-600 flex items-center justify-center shrink-0 overflow-hidden"></div>
+                <div>
+                    <div class="text-xs font-mono-tech text-red-400 uppercase">Entidade Hostil no Setor:</div>
+                    <div id="briefing-stalker-name" class="text-base font-bold text-white">Paracelso (1493–1541)</div>
+                    <div id="briefing-stalker-desc" class="text-xs text-stone-300 mt-0.5">Médico e alquimista da Iatroquímica. Ataca pela porta esquerda se ouvir erros na fornalha.</div>
+                </div>
+            </div>
+
+            <div class="bg-stone-900/90 border border-stone-700 p-4 rounded-lg text-left text-xs text-stone-300 space-y-2 mb-6">
+                <div class="text-amber-400 font-bold uppercase font-mono-tech"><i class="fas fa-clipboard-check mr-1"></i> Protocolo da Bancada desta Fase:</div>
+                <p id="briefing-mechanic-desc" class="leading-relaxed"></p>
+            </div>
+
+            <button onclick="startNightLoop()" class="w-full py-3.5 bg-amber-600 hover:bg-amber-500 text-black font-bold font-mono-tech uppercase tracking-wider rounded-lg transition shadow-[0_0_20px_rgba(217,119,6,0.5)]">
+                Iniciar Turno Noturno [Entrar no Laboratório]
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         JOGO PRINCIPAL EM 1ª PESSOA (OFFICE / LAB)
+    =========================================== -->
+    <div id="game-screen" class="hidden fixed inset-0 z-30 flex flex-col justify-between overflow-hidden bg-stone-950">
+        
+        <!-- HUD SUPERIOR -->
+        <div class="relative z-30 flex flex-wrap items-center justify-between gap-2 p-3 md:px-6 bg-gradient-to-b from-black/95 via-black/70 to-transparent">
+            <!-- Energia & Toxicidade -->
+            <div class="flex items-center gap-4">
+                <div class="bg-stone-900/90 border border-stone-700 px-3 py-1.5 rounded-lg">
+                    <div class="flex items-center justify-between gap-4 text-xs font-mono-tech">
+                        <span class="text-amber-400"><i class="fas fa-bolt mr-1"></i>PILHA DE VOLTA</span>
+                        <span id="hud-power" class="font-bold text-white text-sm">100%</span>
+                    </div>
+                    <div class="flex items-center gap-1 mt-1" id="hud-usage-bars">
+                        <span class="text-[10px] font-mono-tech text-stone-400 mr-1">USO:</span>
+                        <div class="w-3 h-2 bg-emerald-500 rounded-sm"></div>
+                        <div class="w-3 h-2 bg-stone-700 rounded-sm"></div>
+                        <div class="w-3 h-2 bg-stone-700 rounded-sm"></div>
+                        <div class="w-3 h-2 bg-stone-700 rounded-sm"></div>
+                    </div>
+                </div>
+
+                <div class="bg-stone-900/90 border border-stone-700 px-3 py-1.5 rounded-lg">
+                    <div class="flex items-center justify-between gap-3 text-xs font-mono-tech">
+                        <span class="text-emerald-400"><i class="fas fa-skull-crossbones mr-1"></i>TOXICIDADE DO AR</span>
+                        <span id="hud-toxicity" class="font-bold text-white text-sm">0%</span>
+                    </div>
+                    <div class="w-32 h-2 bg-stone-800 rounded-full overflow-hidden mt-1">
+                        <div id="hud-toxicity-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progresso da Meta da Fase -->
+            <div class="bg-stone-900/90 border border-amber-700/50 px-4 py-1.5 rounded-lg text-center">
+                <div id="hud-night-title" class="text-[11px] font-mono-tech text-amber-400 uppercase tracking-wider">NOITE 1: CRIPTA DE PARACELSO</div>
+                <div class="flex items-center justify-center gap-2 mt-0.5">
+                    <span class="text-xs text-stone-300 font-mono-tech">SÍNTESES CONCLUÍDAS:</span>
+                    <span id="hud-tasks" class="text-sm font-bold font-mono-tech text-emerald-400">0 / 3</span>
+                </div>
+            </div>
+
+            <!-- Relógio FNAF & Botão Grimório -->
+            <div class="flex items-center gap-3">
+                <button onclick="toggleGrimoire()" class="px-3 py-2 bg-stone-900 hover:bg-stone-800 border border-amber-600/50 text-amber-300 rounded-lg font-mono-tech text-xs flex items-center gap-1.5" title="Consultar Manual de Alquimia e Química">
+                    <i class="fas fa-book-open"></i> <span class="hidden sm:inline">Grimório</span>
+                </button>
+                <div class="bg-stone-900/90 border border-stone-700 px-3.5 py-1 rounded-lg text-right font-mono-tech">
+                    <div id="hud-clock" class="text-xl md:text-2xl font-bold text-white leading-none">12:00 AM</div>
+                    <div class="text-[10px] text-stone-400">META: 06:00 AM</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ALERTA DE PERIGO / PASSOS -->
+        <div id="danger-alert" class="hidden relative z-30 mx-auto px-4 py-1 bg-red-950/90 border border-red-500 text-red-200 text-xs font-mono-tech rounded-full animate-bounce">
+            <i class="fas fa-exclamation-triangle mr-1"></i> PRESENÇA DETECTADA NOS ARREDORES! VERIFIQUE PORTAS OU CÂMERAS!
+        </div>
+
+        <!-- GRAVADOR DE VOZ ASSOMBRADO ("PHONE GUY" ALQUÍMICO) -->
+        <div id="phone-guy-banner" class="hidden relative z-30 mx-auto max-w-2xl w-[92%] bg-stone-900/95 border border-amber-500/80 px-4 py-2 rounded-xl shadow-2xl flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-amber-950 border border-amber-500 flex items-center justify-center shrink-0">
+                    <i class="fas fa-phone-volume text-amber-400 animate-ping text-xs"></i>
+                </div>
+                <div class="text-xs font-mono-tech">
+                    <span class="text-amber-400 font-bold uppercase block">CHAMADA GRAVADA • GUARDIÃO DA ESCOLA CÉAM:</span>
+                    <span id="phone-guy-subtitle" class="text-stone-200 italic">"Alô? Alô? Aluno do Prof. Júlio César, você está me ouvindo?..."</span>
+                </div>
+            </div>
+            <button onclick="mutePhoneGuy()" class="px-2.5 py-1 bg-red-950 hover:bg-red-800 border border-red-600 text-red-200 rounded font-mono-tech text-[10px] uppercase shrink-0">
+                Mutar Chamada
+            </button>
+        </div>
+
+        <!-- ==========================================
+             VIEWPORT PANORÂMICO EM 1ª PESSOA
+        =========================================== -->
+        <div id="fp-viewport" class="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden">
+            
+            <!-- Máscara de Lanterna -->
+            <div id="flashlight-mask" class="absolute inset-0 z-20 pointer-events-none"></div>
+
+            <!-- SETAS LATERAIS DE NAVEGAÇÃO RÁPIDA (LOOK LEFT / RIGHT) -->
+            <button id="btn-nav-left" onclick="setView('left')" class="absolute left-2 top-1/2 -translate-y-1/2 z-25 bg-black/70 hover:bg-amber-950/80 border border-stone-600 hover:border-amber-500 text-stone-200 px-3 py-6 rounded-r-xl transition flex flex-col items-center gap-2 group">
+                <i class="fas fa-chevron-left text-xl group-hover:-translate-x-1 transition"></i>
+                <span class="font-mono-tech text-[10px] [writing-mode:vertical-lr] rotate-180 tracking-widest">CORREDOR ESQ [A]</span>
+                <span id="left-door-indicator" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            </button>
+
+            <button id="btn-nav-right" onclick="setView('right')" class="absolute right-2 top-1/2 -translate-y-1/2 z-25 bg-black/70 hover:bg-amber-950/80 border border-stone-600 hover:border-amber-500 text-stone-200 px-3 py-6 rounded-l-xl transition flex flex-col items-center gap-2 group">
+                <i class="fas fa-chevron-right text-xl group-hover:translate-x-1 transition"></i>
+                <span class="font-mono-tech text-[10px] [writing-mode:vertical-lr] tracking-widest">DUTO DIREITO [D]</span>
+                <span id="right-vent-indicator" class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            </button>
+
+            <!-- ==========================================
+                 VISTA 1: CORREDOR ESQUERDO (PORTA PESADA)
+            =========================================== -->
+            <div id="view-left" class="hidden w-full h-full flex items-center justify-center relative bg-gradient-to-r from-black via-stone-900 to-stone-950 p-6">
+                <div class="max-w-4xl w-full h-[82%] grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    
+                    <!-- Painel de Controle da Porta Esquerda -->
+                    <div class="bg-stone-900/95 border-2 border-stone-700 p-5 rounded-2xl shadow-2xl flex flex-col gap-4 z-20">
+                        <div class="border-b border-stone-700 pb-2">
+                            <span class="text-[10px] font-mono-tech text-amber-500 uppercase">Setor Oeste</span>
+                            <h3 class="text-lg font-bold text-white">Porta de Contenção Blindada</h3>
+                        </div>
+
+                        <button id="btn-door-left" onclick="toggleLeftDoor()" class="py-4 px-4 rounded-xl font-mono-tech font-bold text-sm uppercase tracking-wider border-2 border-red-700 bg-red-950/60 hover:bg-red-800 text-red-200 flex items-center justify-center gap-2 transition shadow-lg">
+                            <i class="fas fa-lock-open"></i> <span>PORTA ABERTA (TRANCAR)</span>
+                        </button>
+
+                        <button id="btn-light-left" onmousedown="setCorridorLight('left', true)" onmouseup="setCorridorLight('left', false)" onmouseleave="setCorridorLight('left', false)" ontouchstart="setCorridorLight('left', true)" ontouchend="setCorridorLight('left', false)" class="py-3 px-4 rounded-xl font-mono-tech text-xs uppercase tracking-wider border border-amber-500/60 bg-amber-950/40 hover:bg-amber-800/60 text-amber-200 flex items-center justify-center gap-2 transition">
+                            <i class="fas fa-lightbulb"></i> Segurar Luz do Corredor
+                        </button>
+
+                        <p class="text-[11px] text-stone-400 leading-relaxed">
+                            <i class="fas fa-info-circle text-amber-500 mr-1"></i> Ilumine a fresta da porta. Se o personagem histórico estiver parado no corredor, tranque a porta imediatamente até ele ir embora!
+                        </p>
+
+                        <button onclick="setView('center')" class="mt-auto py-2.5 bg-stone-800 hover:bg-stone-700 text-white rounded-lg font-mono-tech text-xs uppercase">
+                            <i class="fas fa-arrow-right mr-1"></i> Voltar à Bancada [S]
+                        </button>
+                    </div>
+
+                    <!-- Visual da Porta Esquerda em 1ª Pessoa -->
+                    <div class="md:col-span-2 h-full bg-black border-4 border-stone-800 rounded-2xl relative overflow-hidden flex items-center justify-center shadow-[inset_0_0_80px_#000]">
+                        <!-- Fundo do Corredor Escuro -->
+                        <div id="left-corridor-scene" class=" inset-0 w-full h-full flex flex-col items-center justify-end p-8 transition duration-150 opacity-10 bg-[radial-gradient(circle_at_center,#292524_0%,#000000_85%)]">
+                            <div class="text-xs font-mono-tech text-stone-500 mb-auto">CORREDOR OESTE - ACESSO AO LABORATÓRIO</div>
+                            
+                            <!-- Silhueta do Personagem Real quando está na porta! -->
+                            <div id="left-monster-figure" class="hidden flex-col items-center animate-pulse">
+                                <div id="left-monster-svg" class="w-48 h-48 md:w-56 md:h-56 drop-shadow-[0_0_25px_rgba(220,38,38,0.8)]"></div>
+                                <span id="left-monster-label" class="mt-2 px-3 py-1 bg-red-950/90 border border-red-600 text-red-300 font-mono-tech text-xs rounded">
+                                    ELE ESTÁ NA PORTA! FECHE AGORA!
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Grade de Ferro / Porta que Desce -->
+                        <div id="left-door-shutter" class="absolute inset-0 bg-stone-800 border-b-8 border-amber-600 transition-transform duration-300 -translate-y-full flex flex-col items-center justify-center" style="background-image: repeating-linear-gradient(45deg, #1c1917 0, #1c1917 15px, #292524 15px, #292524 30px);">
+                            <div class="w-24 h-24 rounded-full border-4 border-amber-600/80 flex items-center justify-center bg-stone-950 shadow-2xl">
+                                <i class="fas fa-lock text-4xl text-amber-500"></i>
+                            </div>
+                            <span class="mt-3 font-mono-tech text-sm text-amber-400 tracking-widest uppercase bg-black/80 px-4 py-1 rounded">PORTA TRANCADA (CONSUMINDO ENERGIA)</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 VISTA 2: CENTRO (BANCADA DE ALQUIMIA E QUÍMICA)
+            =========================================== -->
+            <div id="view-center" class="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 relative">
+                <!-- Ambiente de Fundo do Laboratório (Muda por Fase) -->
+                <div id="lab-backdrop" class="max-w-4xl w-full bg-stone-900/90 border-2 border-amber-700/40 rounded-2xl p-5 md:p-6 shadow-[0_0_60px_rgba(0,0,0,0.9)] relative z-10 flex flex-col justify-between min-h-[430px]">
+                    
+                    <!-- Cabeçalho da Bancada -->
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-700/80 pb-3">
+                        <div>
+                            <span id="bench-era-tag" class="text-[10px] font-mono-tech uppercase px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-700/50">
+                                Fase 1 • Século XVI
+                            </span>
+                            <h2 id="bench-title" class="font-alchemy text-xl md:text-2xl text-white mt-1">
+                                Fornalha Athanor de Paracelso
+                            </h2>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="purgeAirToxicity()" class="px-3 py-1.5 bg-emerald-950 hover:bg-emerald-900 border border-emerald-600 text-emerald-300 rounded-lg font-mono-tech text-xs flex items-center gap-1.5 transition" title="Gasta 4% de bateria para purificar gases tóxicos">
+                                <i class="fas fa-wind"></i> Exaustor de Gases (-4% Energia)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pedido / Enigma Atual na Bancada -->
+                    <div class="my-3 bg-black/70 border border-stone-700 p-3.5 rounded-xl">
+                        <div class="flex items-center justify-between text-xs font-mono-tech text-amber-400 mb-1">
+                            <span><i class="fas fa-scroll mr-1"></i> FÓRMULA / MANUSCRITO EXIGIDO PARA ESTABILIZAR O REATOR:</span>
+                            <span id="bench-step-counter">PARTE 1 DE 3</span>
+                        </div>
+                        <p id="bench-prompt" class="text-sm md:text-base text-stone-100 font-medium leading-snug"></p>
+                        <p id="bench-hint" class="text-xs text-stone-400 mt-1 italic"></p>
+                    </div>
+
+                    <!-- Área Interativa Dinâmica (Muda conforme a Fase 1, 2, 3, 4 ou 5!) -->
+                    <div id="bench-interactive-area" class="my-auto py-2">
+                        <!-- Renderizado via JS conforme a mecânica da fase -->
+                    </div>
+
+                    <!-- Feedback da Bancada -->
+                    <div id="bench-feedback" class="text-center font-mono-tech text-xs h-5 text-stone-400">
+                        Manipule os instrumentos acima com precisão. Erros liberam gás tóxico e atraem a entidade!
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 VISTA 3: CORREDOR DIREITO (DUTO DE GASES & VÁLVULA)
+            =========================================== -->
+            <div id="view-right" class="hidden w-full h-full flex items-center justify-center relative bg-gradient-to-l from-black via-stone-900 to-stone-950 p-6">
+                <div class="max-w-4xl w-full h-[82%] grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                    
+                    <!-- Visual da Janela / Conduto Direito -->
+                    <div class="md:col-span-2 h-full bg-black border-4 border-stone-800 rounded-2xl relative overflow-hidden flex items-center justify-center shadow-[inset_0_0_80px_#000]">
+                        <div id="right-corridor-scene" class="inset-0 w-full h-full flex flex-col items-center justify-end p-8 transition duration-150 opacity-10 bg-[radial-gradient(circle_at_center,#064e3b_0%,#000000_85%)]">
+                            <div class="text-xs font-mono-tech text-stone-500 mb-auto">GALERIA LESTE & DUTO DE VENTILAÇÃO</div>
+                            
+                            <!-- Silhueta do Personagem Real quando está na direita! -->
+                            <div id="right-monster-figure" class="hidden flex-col items-center animate-pulse">
+                                <div id="right-monster-svg" class="w-48 h-48 md:w-56 md:h-56 drop-shadow-[0_0_25px_rgba(16,185,129,0.8)]"></div>
+                                <span id="right-monster-label" class="mt-2 px-3 py-1 bg-red-950/90 border border-red-600 text-red-300 font-mono-tech text-xs rounded">
+                                    INTRUSO NO DUTO LESTE! SELAR VÁLVULA!
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Comporta Hermética que Fecha -->
+                        <div id="right-vent-shutter" class="absolute inset-0 bg-stone-900 border-l-8 border-emerald-600 transition-transform duration-300 translate-x-full flex flex-col items-center justify-center" style="background-image: repeating-linear-gradient(-45deg, #0f172a 0, #0f172a 15px, #1e293b 15px, #1e293b 30px);">
+                            <div class="w-24 h-24 rounded-full border-4 border-emerald-500/80 flex items-center justify-center bg-stone-950 shadow-2xl">
+                                <i class="fas fa-radiation text-4xl text-emerald-400"></i>
+                            </div>
+                            <span class="mt-3 font-mono-tech text-sm text-emerald-400 tracking-widest uppercase bg-black/80 px-4 py-1 rounded">COMPORTA LESTE SELADA</span>
+                        </div>
+                    </div>
+
+                    <!-- Painel de Controle Direito -->
+                    <div class="bg-stone-900/95 border-2 border-stone-700 p-5 rounded-2xl shadow-2xl flex flex-col gap-4 z-20">
+                        <div class="border-b border-stone-700 pb-2">
+                            <span class="text-[10px] font-mono-tech text-emerald-400 uppercase">Setor Leste</span>
+                            <h3 class="text-lg font-bold text-white">Comporta & Duto Químico</h3>
+                        </div>
+
+                        <button id="btn-vent-right" onclick="toggleRightVent()" class="py-4 px-4 rounded-xl font-mono-tech font-bold text-sm uppercase tracking-wider border-2 border-emerald-700 bg-emerald-950/60 hover:bg-emerald-800 text-emerald-200 flex items-center justify-center gap-2 transition shadow-lg">
+                            <i class="fas fa-door-open"></i> <span>DUTO ABERTO (SELAR)</span>
+                        </button>
+
+                        <button id="btn-light-right" onmousedown="setCorridorLight('right', true)" onmouseup="setCorridorLight('right', false)" onmouseleave="setCorridorLight('right', false)" ontouchstart="setCorridorLight('right', true)" ontouchend="setCorridorLight('right', false)" class="py-3 px-4 rounded-xl font-mono-tech text-xs uppercase tracking-wider border border-amber-500/60 bg-amber-950/40 hover:bg-amber-800/60 text-amber-200 flex items-center justify-center gap-2 transition">
+                            <i class="fas fa-lightbulb"></i> Iluminar Galeria Leste
+                        </button>
+
+                        <p class="text-[11px] text-stone-400 leading-relaxed">
+                            <i class="fas fa-exclamation-circle text-emerald-400 mr-1"></i> Atenção: Enquanto a comporta leste estiver selada, a toxicidade do ar sobe um pouco mais rápido! Só sele quando necessário.
+                        </p>
+
+                        <button onclick="setView('center')" class="mt-auto py-2.5 bg-stone-800 hover:bg-stone-700 text-white rounded-lg font-mono-tech text-xs uppercase">
+                            <i class="fas fa-arrow-left mr-1"></i> Voltar à Bancada [S]
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 SISTEMA DE CÂMERAS DE SEGURANÇA (MONITOR FNAF)
+            =========================================== -->
+            <div id="camera-tablet" class="hidden absolute inset-4 md:inset-8 z-30 bg-stone-950 border-4 border-stone-600 rounded-2xl shadow-[0_0_100px_#000] flex flex-col md:flex-row overflow-hidden">
+                
+                <!-- Feed da Câmera Selecionada -->
+                <div class="flex-1 relative bg-black flex flex-col justify-between p-5 overflow-hidden">
+                    <!-- Ruído estático de troca de câmera -->
+                    <div id="cam-static" class="inset-0 absolute bg-stone-900/40 pointer-events-none flicker-anim"></div>
+
+                    <!-- Topo do Feed -->
+                    <div class="relative z-10 flex items-center justify-between border-b border-stone-800 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-600 animate-ping"></span>
+                            <span id="cam-title" class="font-mono-tech text-sm md:text-base text-white font-bold">CAM 01 - Arquivo Hermético</span>
+                        </div>
+                        <span class="font-mono-tech text-xs text-emerald-400">SINAL DE VÍDEO ATIVO</span>
+                    </div>
+
+                    <!-- Visualização da Sala e do Personagem Real -->
+                    <div id="cam-viewport" class="relative z-10 my-auto flex flex-col items-center justify-center min-h-[240px] p-4">
+                        <div id="cam-room-art" class="text-center max-w-md"></div>
+                        <div id="cam-stalker-presence" class="mt-4"></div>
+                    </div>
+
+                    <!-- Dica Científica Descoberta na Câmera! -->
+                    <div class="relative z-10 bg-stone-900/90 border border-amber-600/40 p-3 rounded-lg flex items-center justify-between">
+                        <div class="text-xs font-mono-tech">
+                            <span class="text-amber-400 uppercase font-bold"><i class="fas fa-search mr-1"></i> Inscrição nas Paredes desta Sala:</span>
+                            <span id="cam-clue-text" class="text-stone-200 ml-1"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mapa de Câmeras do Complexo Alquímico -->
+                <div class="w-full md:w-80 bg-stone-900 border-t md:border-t-0 md:border-l border-stone-700 p-4 flex flex-col justify-between">
+                    <div>
+                        <div class="text-xs font-mono-tech text-stone-400 uppercase tracking-wider mb-2">
+                            Mapa do Subsolo Alquímico
+                        </div>
+                        <!-- Botões das 6 Câmeras -->
+                        <div class="grid grid-cols-2 gap-2 mb-4" id="cam-buttons-grid">
+                            <button onclick="selectCamera(0)" id="btn-cam-0" class="cam-btn p-2.5 bg-stone-800 border border-amber-500 text-left rounded font-mono-tech text-xs text-white">
+                                <span class="text-amber-400 block font-bold">CAM 01</span> Biblioteca de Hermes
+                            </button>
+                            <button onclick="selectCamera(1)" id="btn-cam-1" class="cam-btn p-2.5 bg-stone-800 border border-stone-600 text-left rounded font-mono-tech text-xs text-stone-300">
+                                <span class="text-amber-400 block font-bold">CAM 02</span> Fornalha Athanor
+                            </button>
+                            <button onclick="selectCamera(2)" id="btn-cam-2" class="cam-btn p-2.5 bg-stone-800 border border-stone-600 text-left rounded font-mono-tech text-xs text-stone-300">
+                                <span class="text-amber-400 block font-bold">CAM 03</span> Galeria de Vidrarias
+                            </button>
+                            <button onclick="selectCamera(3)" id="btn-cam-3" class="cam-btn p-2.5 bg-stone-800 border border-stone-600 text-left rounded font-mono-tech text-xs text-stone-300">
+                                <span class="text-amber-400 block font-bold">CAM 04</span> Câmara Pneumática
+                            </button>
+                            <button onclick="selectCamera(4)" id="btn-cam-4" class="cam-btn p-2.5 bg-stone-800 border border-stone-600 text-left rounded font-mono-tech text-xs text-stone-300">
+                                <span class="text-red-400 block font-bold">CAM 05 (ESQ)</span> Corredor Oeste
+                            </button>
+                            <button onclick="selectCamera(5)" id="btn-cam-5" class="cam-btn p-2.5 bg-stone-800 border border-stone-600 text-left rounded font-mono-tech text-xs text-stone-300">
+                                <span class="text-emerald-400 block font-bold">CAM 06 (DIR)</span> Duto Leste
+                            </button>
+                        </div>
+
+                        <!-- Ação de Distração Sonora / Pulso de Magnésio -->
+                        <div class="bg-black/60 border border-stone-700 p-3 rounded-xl">
+                            <div class="text-xs font-mono-tech text-amber-300 font-bold mb-1">
+                                <i class="fas fa-bolt mr-1"></i> Flash de Magnésio (CAM 01-04)
+                            </div>
+                            <p class="text-[11px] text-stone-400 mb-2">
+                                Se encontrar o cientista em uma câmera distante, dispare um clarão fotoquímico para atrasar o avanço dele!
+                            </p>
+                            <button onclick="triggerCameraFlash()" class="w-full py-2 bg-amber-700 hover:bg-amber-600 text-black font-bold font-mono-tech text-xs uppercase rounded transition">
+                                Disparar Clarão de Magnésio (-3% Energia)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-stone-800 text-center">
+                        <div class="text-[11px] font-mono-tech text-stone-400 mb-2">VOCÊ ESTÁ NA BANCADA CENTRAL</div>
+                        <button onclick="toggleCameraTablet()" class="w-full py-2.5 bg-red-900/80 hover:bg-red-800 text-white font-mono-tech text-xs uppercase rounded-lg border border-red-600">
+                            <i class="fas fa-laptop-code mr-1"></i> Baixar Monitor [W / Espaço]
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BARRA INFERIOR DE CONTROLE FNAF (MONITOR & NAVEGAÇÃO) -->
+        <div class="relative z-30 p-3 bg-black/95 border-t border-stone-800 flex items-center justify-center gap-3">
+            <button onclick="setView('left')" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 border border-stone-700 rounded-lg font-mono-tech text-xs text-stone-300">
+                <i class="fas fa-door-closed mr-1 text-red-400"></i> Porta Esq [A]
+            </button>
+            <button onclick="setView('center')" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 border border-amber-700/60 rounded-lg font-mono-tech text-xs text-amber-300">
+                <i class="fas fa-flask mr-1"></i> Bancada Central [S]
+            </button>
+            <button onclick="toggleCameraTablet()" class="px-6 py-2.5 bg-stone-800 hover:bg-amber-900/70 border-2 border-amber-500/80 rounded-xl font-mono-tech text-xs md:text-sm font-bold text-white tracking-wider uppercase shadow-lg flex items-center gap-2">
+                <i class="fas fa-tv text-amber-400"></i> Monitor de Câmeras [W / Espaço]
+            </button>
+            <button onclick="setView('right')" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 border border-stone-700 rounded-lg font-mono-tech text-xs text-stone-300">
+                <i class="fas fa-fan mr-1 text-emerald-400"></i> Duto Dir [D]
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ==========================================
+         MODAL DO GRIMÓRIO CIENTÍFICO (COLA DE ESTUDO)
+    =========================================== -->
+    <div id="grimoire-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="max-w-4xl w-full max-h-[88vh] bg-stone-950 border-2 border-amber-600 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="p-4 bg-stone-900 border-b border-stone-800 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-book-dead text-amber-500 text-xl"></i>
+                    <h2 class="font-alchemy text-xl text-amber-400">Grimório de Ciências (6º Ano • Prof. Júlio César - Escola Céam)</h2>
+                </div>
+                <button onclick="toggleGrimoire()" class="px-3 py-1 bg-red-950 hover:bg-red-900 text-red-300 border border-red-700 rounded font-mono-tech text-xs">
+                    FECHAR [ESC]
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-5 text-sm text-stone-300 leading-relaxed">
+                <!-- Seção 1 -->
+                <div class="bg-stone-900/70 border border-stone-800 p-4 rounded-xl">
+                    <h3 class="text-amber-400 font-bold font-mono-tech uppercase mb-2">
+                        1. Alquimia, os 4 Elementos e os Primeiros Utensílios (Noite 1 - Paracelso)
+                    </h3>
+                    <p class="mb-2 text-xs text-stone-300">
+                        Antes da Química moderna, os <strong>Alquimistas</strong> buscavam a <strong>Pedra Filosofal</strong> (capaz de transformar metais em ouro) e o <strong>Elixir da Longa Vida</strong> (remédio para todas as doenças). Eles criaram vidrarias importantes como o <strong>Alambique</strong> (para destilar líquidos) e o <strong>Cadinho/Fornalha</strong> (para aquecer minerais).
+                    </p>
+                    <ul class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono-tech">
+                        <li class="p-2 bg-black/50 rounded border border-stone-800"><span class="text-red-400 font-bold">▲ FOGO + 🜃 TERRA:</span> Usados para aquecer e calcinar minérios brutos no Cadinho.</li>
+                        <li class="p-2 bg-black/50 rounded border border-stone-800"><span class="text-blue-400 font-bold">▼ ÁGUA + 🜔 SAL:</span> Dissolução (Solutio) de sais minerais na água para criar poções curativas.</li>
+                        <li class="p-2 bg-black/50 rounded border border-stone-800"><span class="text-amber-300 font-bold">🜍 ENXOFRE:</span> Pedra amarela que pega fogo facilmente (Princípio da Combustão).</li>
+                        <li class="p-2 bg-black/50 rounded border border-stone-800"><span class="text-cyan-300 font-bold">☿ MERCÚRIO:</span> O único metal líquido prateado em temperatura ambiente!</li>
+                    </ul>
+                </div>
+
+                <!-- Seção 2 -->
+                <div class="bg-stone-900/70 border border-stone-800 p-4 rounded-xl">
+                    <h3 class="text-amber-400 font-bold font-mono-tech uppercase mb-2">
+                        2. Substância Simples, Substância Composta e Misturas (Noite 2 - Boyle & Brand)
+                    </h3>
+                    <ul class="space-y-1.5 text-xs">
+                        <li>• <strong>Substância Pura SIMPLES:</strong> Formada por <strong>apenas 1 tipo de elemento químico</strong>. Exemplos: Gás Oxigênio ($\text{O}_2$), Gás Hidrogênio ($\text{H}_2$), Fósforo ($\text{P}_4$), Ouro puro ($\text{Au}$) e Ferro ($\text{Fe}$).</li>
+                        <li>• <strong>Substância Pura COMPOSTA:</strong> Formada por <strong>2 ou mais elementos diferentes</strong> unidos. Exemplos: Água pura ($\text{H}_2\text{O}$), Gás Carbônico ($\text{CO}_2$) e Sal de Cozinha ($\text{NaCl}$).</li>
+                        <li>• <strong>Mistura HOMOGÊNEA (1 única fase visível):</strong> Aspecto uniforme, não dá para distinguir os componentes a olho nu. Exemplos: <em>Água + Sal dissolvido</em>, <em>Água + Açúcar dissolvido</em>, <em>Ar atmosférico filtrado</em>.</li>
+                        <li>• <strong>Mistura HETEROGÊNEA (2 ou mais fases visíveis):</strong> Conseguimos ver partes separadas. Exemplos: <em>Água + Óleo (2 fases)</em>, <em>Água + Areia (2 fases)</em>, <em>Água + Óleo + Areia (3 fases)</em>, <em>Granito (3 fases)</em>.</li>
+                    </ul>
+                </div>
+
+                <!-- Seção 3 -->
+                <div class="bg-stone-900/70 border border-stone-800 p-4 rounded-xl">
+                    <h3 class="text-amber-400 font-bold font-mono-tech uppercase mb-2">
+                        3. Métodos de Separação de Misturas no Laboratório (Noite 3 - Lavoisier)
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono-tech bg-black/50 p-3 rounded border border-stone-800">
+                        <div>• <strong class="text-amber-300">FILTRAÇÃO:</strong> Usa um filtro para separar <strong>sólido que não dissolve + líquido</strong> (Ex: Água barrenta com areia, ou pó de café e água).</div>
+                        <div>• <strong class="text-emerald-300">DECANTAÇÃO:</strong> Separa <strong>líquidos que não se misturam</strong> (Ex: Água e Óleo no Funil de Decantação) ou deixa o barro pesado afundar.</div>
+                        <div>• <strong class="text-sky-300">DESTILAÇÃO SIMPLES (Alambique):</strong> Ferve uma mistura homogênea de <strong>líquido + sólido dissolvido</strong> (Ex: Água com Sal) para recuperar a água pura e o sal!</div>
+                        <div>• <strong class="text-purple-300">SEPARAÇÃO MAGNÉTICA (Ímã):</strong> Usa um ímã para atrair <strong>limalha de Ferro ($\text{Fe}$)</strong> misturada na areia ou enxofre.</div>
+                        <div>• <strong class="text-pink-300">CATAÇÃO / PENEIRAÇÃO:</strong> Separa sólidos maiores com a mão/pinça (feijão e pedrinhas) ou com peneira (areia fina e pedregulhos).</div>
+                        <div>• <strong class="text-yellow-300">EVAPORAÇÃO:</strong> Deixa a água evaporar ao sol nas salinas para obter apenas o sal sólido.</div>
+                    </div>
+                </div>
+
+                <!-- Seção 4 -->
+                <div class="bg-stone-900/70 border border-stone-800 p-4 rounded-xl">
+                    <h3 class="text-amber-400 font-bold font-mono-tech uppercase mb-2">
+                        4. Tabela Periódica: Símbolos Químicos & Metais x Não-Metais (Noights 4 e 5)
+                    </h3>
+                    <p class="text-xs mb-2">
+                        Organizada por <strong>Dmitri Mendeleev</strong>, a Tabela Periódica reúne todos os elementos químicos conhecidos:
+                    </p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono-tech">
+                        <div class="p-2 bg-black/50 rounded"><strong>Ouro = Au</strong> (Metal amarelo brilhante • Astro Sol ☉)</div>
+                        <div class="p-2 bg-black/50 rounded"><strong>Ferro = Fe</strong> (Metal atraído por ímã • Astro Marte ♂)</div>
+                        <div class="p-2 bg-black/50 rounded"><strong>Cobre = Cu</strong> (Metal avermelhado de fios elétricos • Vênus ♀)</div>
+                        <div class="p-2 bg-black/50 rounded"><strong>Mercúrio = Hg</strong> (Único metal líquido • Astro Mercúrio ☿)</div>
+                        <div class="p-2 bg-black/50 rounded"><strong>Oxigênio = O</strong> (Gás Não-Metal essencial à respiração)</div>
+                        <div class="p-2 bg-black/50 rounded"><strong>Carbono = C</strong> (Não-Metal do carvão, grafite e diamante)</div>
+                        <div class="p-2 bg-black/50 rounded"><strong>Sódio = Na</strong> (Presente no Sal de cozinha NaCl)</div>
+                        <div class="p-2 bg-black/50 rounded"><strong>Rádio = Ra</strong> (Elemento radioativo descoberto por Marie Curie)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         TELA DE JUMPSCARE / GAME OVER
+    =========================================== -->
+    <div id="jumpscare-screen" class="hidden fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div id="jumpscare-figure" class="w-72 h-72 md:w-96 md:h-96 flex items-center justify-center jumpscare-active"></div>
+        <h2 id="gameover-title" class="font-alchemy text-4xl md:text-6xl text-red-600 mt-6 drop-shadow-[0_0_25px_rgba(220,38,38,1)]">
+            TRANSMUTAÇÃO FATAL
+        </h2>
+        <p id="gameover-reason" class="font-mono-tech text-sm md:text-base text-stone-300 max-w-md mt-2"></p>
+        <div class="flex gap-4 mt-8">
+            <button onclick="retryCurrentNight()" class="px-6 py-3 bg-red-700 hover:bg-red-600 text-white font-mono-tech font-bold uppercase rounded-xl shadow-lg">
+                Tentar a Noite Novamente
+            </button>
+            <button onclick="returnToMenu()" class="px-6 py-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-mono-tech uppercase rounded-xl">
+                Menu Principal
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         TELA DE VITÓRIA (06:00 AM!)
+    =========================================== -->
+    <div id="victory-screen" class="hidden fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div class="text-amber-500 font-mono-tech text-6xl md:text-8xl font-bold tracking-widest animate-bounce">
+            06:00 AM
+        </div>
+        <h2 id="victory-title" class="font-alchemy text-2xl md:text-4xl text-emerald-400 mt-4">
+            Turno Sobrevivido com Sucesso!
+        </h2>
+        <p id="victory-desc" class="text-stone-300 font-mono-tech text-sm max-w-lg mt-2"></p>
+        
+        <div class="flex gap-4 mt-8">
+            <button id="btn-next-night" onclick="goToNextNight()" class="px-6 py-3 bg-amber-600 hover:bg-amber-500 text-black font-bold font-mono-tech uppercase rounded-xl shadow-[0_0_25px_rgba(217,119,6,0.6)]">
+                Avançar para a Próxima Noite <i class="fas fa-arrow-right ml-1"></i>
+            </button>
+            <button onclick="openReportModal()" class="px-6 py-3 bg-emerald-700 hover:bg-emerald-600 text-white font-bold font-mono-tech uppercase rounded-xl">
+                <i class="fas fa-file-signature mr-1"></i> Ver Relatório do Professor
+            </button>
+            <button onclick="returnToMenu()" class="px-6 py-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-mono-tech uppercase rounded-xl">
+                Voltar ao Menu
+            </button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         LÓGICA COMPLETA DO JOGO
+    =========================================== -->
+    <script>
+        // ==========================================
+        // 1. RETRATOS SVG DOS PERSONAGENS REAIS (ESTILO GÓTICO / TERROR)
+        // ==========================================
+        const CHARACTER_PORTRAITS = {
+            paracelsus: `
+                <svg viewBox="0 0 200 200" class="w-full h-full">
+                    <defs>
+                        <radialGradient id="glow1" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#7f1d1d" stop-opacity="0.7"/>
+                            <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+                    <circle cx="100" cy="100" r="95" fill="url(#glow1)"/>
+                    <!-- Manto Renascentista -->
+                    <path d="M30,195 C35,140 65,130 100,130 C135,130 165,140 170,195 Z" fill="#1c1917" stroke="#b45309" stroke-width="2"/>
+                    <!-- Rosto de Paracelso -->
+                    <ellipse cx="100" cy="85" rx="36" ry="44" fill="#44403c" stroke="#1c1917" stroke-width="3"/>
+                    <!-- Boina / Chapéu Médico -->
+                    <path d="M55,62 C55,35 145,35 145,62 C125,52 75,52 55,62 Z" fill="#0c0a09" stroke="#d97706" stroke-width="1.5"/>
+                    <!-- Olhos Brilhantes Assombrados -->
+                    <circle cx="85" cy="80" r="5" fill="#ef4444"/>
+                    <circle cx="115" cy="80" r="5" fill="#ef4444"/>
+                    <circle cx="85" cy="80" r="2" fill="#fff"/>
+                    <circle cx="115" cy="80" r="2" fill="#fff"/>
+                    <!-- Expressão Severa -->
+                    <path d="M84,108 Q100,98 116,108" fill="none" stroke="#0c0a09" stroke-width="3"/>
+                    <!-- Símbolo do Mercúrio na Testa/Colar -->
+                    <text x="100" y="168" text-anchor="middle" fill="#f59e0b" font-size="24" font-family="serif">☿</text>
+                </svg>
+            `,
+            brand: `
+                <svg viewBox="0 0 200 200" class="w-full h-full">
+                    <defs>
+                        <radialGradient id="glow2" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#065f46" stop-opacity="0.8"/>
+                            <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+                    <circle cx="100" cy="100" r="95" fill="url(#glow2)"/>
+                    <path d="M25,195 C35,135 65,125 100,125 C135,125 165,135 175,195 Z" fill="#064e3b" stroke="#10b981" stroke-width="2"/>
+                    <ellipse cx="100" cy="85" rx="34" ry="42" fill="#374151" stroke="#111827" stroke-width="3"/>
+                    <!-- Barba Alquímica Longa -->
+                    <path d="M70,100 L100,150 L130,100 Z" fill="#1f2937"/>
+                    <!-- Olhos Fosforescentes Verdes -->
+                    <circle cx="86" cy="78" r="6" fill="#34d399"/>
+                    <circle cx="114" cy="78" r="6" fill="#34d399"/>
+                    <!-- Frasco de Fósforo Brilhante -->
+                    <polygon points="95,145 105,145 114,180 86,180" fill="#6ee7b7" stroke="#fff" stroke-width="1.5"/>
+                </svg>
+            `,
+            lavoisier: `
+                <svg viewBox="0 0 200 200" class="w-full h-full">
+                    <circle cx="100" cy="100" r="90" fill="rgba(185,28,28,0.35)"/>
+                    <!-- Casaca Francesa Séc XVIII -->
+                    <path d="M30,195 C40,135 70,130 100,130 C130,130 160,135 170,195 Z" fill="#1e1b4b" stroke="#f87171" stroke-width="2"/>
+                    <!-- Peruca Empoada Iluminista -->
+                    <path d="M60,90 C50,40 150,40 140,90 C148,95 148,110 138,110 C135,70 65,70 62,110 C52,110 52,95 60,90 Z" fill="#d6d3d1"/>
+                    <ellipse cx="100" cy="88" rx="32" ry="38" fill="#57534e"/>
+                    <!-- Cicatriz Vermelha no Pescoço (Revolução Francesa) -->
+                    <line x1="68" y1="126" x2="132" y2="126" stroke="#dc2626" stroke-width="4"/>
+                    <!-- Olhos de Precisão -->
+                    <circle cx="87" cy="82" r="5" fill="#f87171"/>
+                    <circle cx="113" cy="82" r="5" fill="#f87171"/>
+                    <!-- Balança na Roupa -->
+                    <text x="100" y="172" text-anchor="middle" fill="#fbbf24" font-size="24">⚖</text>
+                </svg>
+            `,
+            mendeleev: `
+                <svg viewBox="0 0 200 200" class="w-full h-full">
+                    <circle cx="100" cy="100" r="90" fill="rgba(217,119,6,0.3)"/>
+                    <path d="M25,195 C35,140 65,130 100,130 C135,130 165,140 175,195 Z" fill="#18181b" stroke="#fbbf24" stroke-width="2"/>
+                    <!-- Cabelo e Barba Longa Desgrenhada de Mendeleev -->
+                    <path d="M50,95 C40,35 160,35 150,95 L160,130 L135,120 L100,170 L65,120 L40,130 Z" fill="#52525b"/>
+                    <ellipse cx="100" cy="85" rx="30" ry="36" fill="#71717a"/>
+                    <circle cx="88" cy="80" r="5.5" fill="#f59e0b"/>
+                    <circle cx="112" cy="80" r="5.5" fill="#f59e0b"/>
+                    <text x="100" y="182" text-anchor="middle" fill="#fbbf24" font-size="16" font-family="monospace">[Z=101 Md]</text>
+                </svg>
+            `,
+            curie: `
+                <svg viewBox="0 0 200 200" class="w-full h-full">
+                    <circle cx="100" cy="100" r="92" fill="rgba(16,185,129,0.45)"/>
+                    <!-- Vestido de Laboratório Vitoriano -->
+                    <path d="M35,195 C45,135 70,128 100,128 C130,128 155,135 165,195 Z" fill="#022c22" stroke="#34d399" stroke-width="2.5"/>
+                    <!-- Coque de Cabelo -->
+                    <circle cx="100" cy="42" r="18" fill="#1f2937"/>
+                    <ellipse cx="100" cy="85" rx="31" ry="38" fill="#4b5563" stroke="#6ee7b7" stroke-width="2"/>
+                    <!-- Olhos Radioativos -->
+                    <circle cx="88" cy="82" r="6" fill="#10b981"/>
+                    <circle cx="112" cy="82" r="6" fill="#10b981"/>
+                    <circle cx="88" cy="82" r="2.5" fill="#ecfdf5"/>
+                    <circle cx="112" cy="82" r="2.5" fill="#ecfdf5"/>
+                    <!-- Símbolo Radioativo -->
+                    <text x="100" y="172" text-anchor="middle" fill="#34d399" font-size="26">☢</text>
+                </svg>
+            `
+        };
+
+        // ==========================================
+        // 2. CONFIGURAÇÃO DAS 5 NOITES (6º ANO DO ENSINO FUNDAMENTAL) + CUSTOM NIGHT
+        // ==========================================
+        const NIGHTS_DATA = [
+            {
+                id: 1,
+                title: "A Cripta de Paracelso",
+                era: "Noite 1 • Da Alquimia aos Primeiros Ingredientes",
+                topicSummary: "Alquimia, 4 Elementos, Utensílios e Ingredientes Naturais",
+                stalkerName: "Paracelso (O Médico Alquimista)",
+                stalkerKey: "paracelsus",
+                stalkerBio: "Alquimista do século XVI que produzia remédios usando minerais no caldeirão. Ataca pela Porta Oeste se ouvir erros na mistura!",
+                mechanicDesc: "CALDEIRÃO ALQUÍMICO (6º ANO): Coloque no caldeirão os 3 ingredientes na ordem pedida pela receita histórica para criar ligas, tinturas e elixires!",
+                phoneGuyScript: "Alô? Alô? Estudante da Escola Céam, está me ouvindo? Aqui é o antigo vigia do laboratório do Professor Júlio César! Na Noite 1, Paracelso vaga pelos corredores. Use as câmeras para ler as receitas nas paredes e misture os elementos certos no caldeirão. Se ouvir passos, ilumine a porta e tranque rápido!",
+                aggressiveness: 0.24,
+                clues: [
+                    "CAM 01: 'Para aquecer o minério bruto: use Fogo (▲), Terra (🜃) e Sal (🜔).'",
+                    "CAM 02: 'O pigmento Vermelho Cinábrio é feito unindo o metal líquido Mercúrio (☿), a pedra inflamável Enxofre (🜍) e Fogo (▲).'",
+                    "CAM 03: 'Para a Solução Purificadora: dissolva na Água (▼) o Sal (🜔) e sopre o Ar (🜁).'",
+                    "CAM 04: 'Os alquimistas buscavam a Pedra Filosofal e o Elixir da Longa Vida!'"
+                ],
+                challenges: [
+                    {
+                        prompt: "1ª Receita Alquímica: Aqueça e purifique o minério terrestre no Cadinho (Calcinação).",
+                        hint: "Clique na ordem exata: 1º O elemento que queima (Fogo ▲) → 2º O elemento sólido do solo (Terra 🜃) → 3º O mineral branco cristalino (Sal 🜔).",
+                        targetRecipe: ["FOGO", "TERRA", "SAL"]
+                    },
+                    {
+                        prompt: "2ª Receita Alquímica: Crie o famoso pó vermelho dos alquimistas (Cinábrio).",
+                        hint: "Clique na ordem exata: 1º O único metal líquido prateado (Mercúrio ☿) → 2º O pó amarelo que pega fogo (Enxofre 🜍) → 3º O calor da fornalha (Fogo ▲).",
+                        targetRecipe: ["MERCURIO", "ENXOFRE", "FOGO"]
+                    },
+                    {
+                        prompt: "3ª Receita Alquímica: Prepare o 'Elixir Líquido de Paracelso' por dissolução.",
+                        hint: "Clique na ordem exata: 1º O líquido universal (Água ▼) → 2º O mineral solúvel (Sal 🜔) → 3º O sopro gasoso (Ar 🜁).",
+                        targetRecipe: ["AGUA", "SAL", "AR"]
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "O Gabinete das Substâncias e Misturas",
+                era: "Noite 2 • Substâncias Simples, Compostas e Fases da Mistura",
+                topicSummary: "Substâncias Simples/Compostas e Misturas Homogêneas/Heterogêneas",
+                stalkerName: "Hennig Brand & Robert Boyle",
+                stalkerKey: "brand",
+                stalkerBio: "Descobridor do Fósforo que brilha no escuro (Brand) e o pai da Química Experimental (Boyle). Eles vigiam se você sabe diferenciar substâncias e misturas!",
+                mechanicDesc: "ANALISADOR DE FRASCOS (6º ANO): Observe o frasco na bancada! Primeiro classifique o tipo de matéria e depois indique quantas FASES VISÍVEIS ou ELEMENTOS existem nele!",
+                phoneGuyScript: "Alô! Você sobreviveu à primeira noite! Agora o Professor Júlio César deixou os frascos de Robert Boyle na bancada. Lembre-se das aulas do 6º ano: Substância Simples tem só 1 elemento; Composta tem 2 ou mais elementos. Mistura Homogênea tem 1 fase só, e Heterogênea tem 2 ou mais fases visíveis!",
+                aggressiveness: 0.34,
+                clues: [
+                    "CAM 01: 'Substância SIMPLES tem apenas 1 tipo de átomo/elemento (Ex: O₂ ou Ouro Au).'",
+                    "CAM 02: 'Substância COMPOSTA tem 2 ou mais elementos diferentes na fórmula (Ex: Água Pura H₂O tem H e O).'",
+                    "CAM 03: 'Água com Sal dissolvido tem aspecto único: é Mistura HOMOGÊNEA (1 fase visível).'",
+                    "CAM 04: 'Água + Óleo + Areia não se misturam: formam uma Mistura HETEROGÊNEA com 3 fases visíveis!'"
+                ],
+                challenges: [
+                    {
+                        prompt: "1º Frasco: Um cilindro contendo apenas Água Destilada Pura (Fórmula química: H₂O) e um cilindro com Gás Oxigênio Puro (O₂). Como classificamos a ÁGUA PURA (H₂O)?",
+                        hint: "Veja a fórmula H₂O: ela é uma substância pura formada por 2 elementos químicos diferentes (Hidrogênio e Oxigênio)!",
+                        targetClass: "COMPOSTA",
+                        targetCount: 2,
+                        countLabel: "Quantos elementos diferentes formam a molécula H₂O?"
+                    },
+                    {
+                        prompt: "2º Frasco: Um béquer contendo Água filtrada + Sal de cozinha totalmente dissolvido (Salmoura transparente).",
+                        hint: "Você não consegue ver o sal separado da água! É uma Mistura Homogênea ou Heterogênea? Quantas fases visíveis ela tem?",
+                        targetClass: "HOMOGENEA",
+                        targetCount: 1,
+                        countLabel: "Quantas FASES VISÍVEIS você enxerga nesse copo?"
+                    },
+                    {
+                        prompt: "3º Frasco: Um tubo de ensaio contendo Areia no fundo + Água no meio + Óleo boiando por cima.",
+                        hint: "Você enxerga claramente a camada de areia, a camada de água e a camada de óleo!",
+                        targetClass: "HETEROGENEA",
+                        targetCount: 3,
+                        countLabel: "Quantas FASES VISÍVEIS (camadas) existem nesse tubo?"
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "A Oficina de Separação de Misturas",
+                era: "Noite 3 • Filtração, Decantação, Destilação e Magnetismo",
+                topicSummary: "Métodos de Separação de Misturas Homogêneas e Heterogêneas",
+                stalkerName: "Antoine Lavoisier",
+                stalkerKey: "lavoisier",
+                stalkerBio: "Cientista francês mestre dos equipamentos de laboratório. Se você usar o aparelho errado para separar uma mistura, ele avança pelos corredores!",
+                mechanicDesc: "ESTAÇÃO DE SEPARAÇÃO DE MISTURAS (6º ANO): Escolha o Aparelho de Laboratório correto para separar cada mistura do cotidiano!",
+                phoneGuyScript: "Noite 3! Lavoisier está patrulhando o subsolo! Na bancada de hoje você precisa separar misturas de verdade: use o Ímã para atrair o ferro, o Filtro de papel para reter areia na água, o Funil de Decantação para água e óleo, e o Alambique de Destilação para água com sal dissolvido!",
+                aggressiveness: 0.43,
+                clues: [
+                    "CAM 01: 'SEPARAÇÃO MAGNÉTICA: O ímã atrai metais como Limalha de Ferro misturada na areia!'",
+                    "CAM 02: 'FILTRAÇÃO: O filtro de papel retém sólidos insolúveis como areia ou pó de café da água.'",
+                    "CAM 03: 'DECANTAÇÃO: Líquidos que não se misturam (Água e Óleo) são separados no Funil de Decantação.'",
+                    "CAM 04: 'DESTILAÇÃO SIMPLES: Ferve a água salgada no Alambique para separar a Água pura do Sal dissolvido!'"
+                ],
+                challenges: [
+                    {
+                        prompt: "1ª Amostra Contaminada: Um pote contendo Areia seca misturada com Limalha de Ferro (pó de ferro metálico).",
+                        hint: "Qual ferramenta retira instantaneamente o Ferro sem precisar molhar a areia?",
+                        targetMethod: "IMA",
+                        targetResult: "FERRO_ATRAIDO"
+                    },
+                    {
+                        prompt: "2ª Amostra Contaminada: Um frasco com Água + Óleo de cozinha (dois líquidos que não se misturam).",
+                        hint: "O óleo fica por cima por ser menos denso e a água desce pela torneirinha do aparelho!",
+                        targetMethod: "DECANTACAO",
+                        targetResult: "LIQUIDOS_SEPARADOS"
+                    },
+                    {
+                        prompt: "3ª Amostra Contaminada: Água do mar (Água + Sal totalmente dissolvido). Precisamos recuperar a Água pura líquida para beber!",
+                        hint: "O filtro comum não segura o sal dissolvido! Precisamos ferver a água e condensar o vapor no Alambique!",
+                        targetMethod: "DESTILACAO",
+                        targetResult: "AGUA_PURA_DESTILADA"
+                    }
+                ]
+            },
+            {
+                id: 4,
+                title: "O Cofre da Tabela Periódica de Mendeleev",
+                era: "Noite 4 • Símbolos Químicos e os Elementos do Cotidiano",
+                topicSummary: "Tabela Periódica: Símbolos Químicos, Metais e Não-Metais",
+                stalkerName: "Dmitri Mendeleev",
+                stalkerKey: "mendeleev",
+                stalkerBio: "O criador da Tabela Periódica! Ele espalhou cartas de elementos pelo laboratório. Descubra o Símbolo Químico e se é Metal ou Gás Não-Metal!",
+                mechanicDesc: "PAINEL DA TABELA PERIÓDICA (6º ANO): Selecione a peça do Elemento Químico com o Símbolo correto e classifique sua propriedade principal!",
+                phoneGuyScript: "Alô! Chegamos à Noite 4! Mendeleev organizou todos os elementos na Tabela Periódica. Fique atento aos símbolos que o Professor Júlio César ensinou: Ouro é Au, Ferro é Fe, Cobre é Cu, Mercúrio é Hg e Oxigênio é O! Não esqueça de vigiar o Duto Leste!",
+                aggressiveness: 0.52,
+                clues: [
+                    "CAM 01: 'Ouro tem símbolo Au (do latim Aurum) — é um Metal nobre amarelo brilhante.'",
+                    "CAM 02: 'Ferro tem símbolo Fe — é um Metal sólido magnético muito usado em ferramentas e no aço.'",
+                    "CAM 03: 'Oxigênio tem símbolo O — é um Não-Metal (Gás) indispensável para a respiração e combustão.'",
+                    "CAM 04: 'Mercúrio tem símbolo Hg — é o único Metal que é líquido na temperatura ambiente!'"
+                ],
+                challenges: [
+                    {
+                        prompt: "1ª Trava Periódica: Os antigos alquimistas o chamavam de 'Metal do Sol (☉)'. É amarelo, reluzente, não enferruja e é usado em joias e medalhas.",
+                        hint: "Qual é o Símbolo Químico do Ouro na Tabela Periódica e sua classificação?",
+                        targetSymbol: "Au",
+                        targetCategory: "METAL_SOLIDO"
+                    },
+                    {
+                        prompt: "2ª Trava Periódica: Elemento químico presente no ar que respiramos, essencial para a vida e para manter a chama das velas acesa.",
+                        hint: "Procure o Símbolo Químico do Oxigênio e sua classificação correta!",
+                        targetSymbol: "O",
+                        targetCategory: "GAS_NAO_METAL"
+                    },
+                    {
+                        prompt: "3ª Trava Periódica: O famoso 'Hidrargírio' (Prata Líquida) dos alquimistas. É o único metal da Tabela Periódica que é LÍQUIDO na temperatura da sala!",
+                        hint: "Qual é o Símbolo Químico do Mercúrio e seu estado físico?",
+                        targetSymbol: "Hg",
+                        targetCategory: "METAL_LIQUIDO"
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "O Laboratório Brilhante de Marie Curie",
+                era: "Noite 5 • Grande Revisão: Elementos, Misturas e Transformações",
+                topicSummary: "Revisão Geral 6º Ano: Elementos de Marie Curie, Transformações e Misturas",
+                stalkerName: "Marie Skłodowska-Curie",
+                stalkerKey: "curie",
+                stalkerBio: "A grande cientista ganhadora de dois Prêmios Nobel que descobriu o Rádio e o Polônio! Na 5ª Noite ela testa tudo o que você aprendeu no 6º ano!",
+                mechanicDesc: "REATOR CENTRAL DE MARIE CURIE (6º ANO): Ative as 3 chaves científicas corretas sobre a Tabela Periódica, Separação da Pechblenda e Transformações da Matéria!",
+                phoneGuyScript: "Última noite regular, estudante da Escola Céam! Marie Curie está no laboratório e o reator brilha no escuro! Ela usava filtração e cristalização para separar os elementos Rádio e Polônio do minério bruto. Complete as 3 etapas finais e entregue seu relatório nota 10 ao Professor Júlio César!",
+                aggressiveness: 0.62,
+                clues: [
+                    "CAM 01: 'Marie Curie descobriu dois novos elementos na Tabela Periódica: Polônio (Po) e Rádio (Ra).'",
+                    "CAM 02: 'Para separar a areia e rocha triturada da água ácida, Marie Curie usava a FILTRAÇÃO.'",
+                    "CAM 03: 'Gás Carbônico (CO₂) e Água (H₂O) têm mais de um elemento químico: são Substâncias COMPOSTAS!'",
+                    "CAM 04: 'Fios elétricos do laboratório são feitos de Cobre (Símbolo Cu), um ótimo condutor elétrico!'"
+                ],
+                challenges: [
+                    {
+                        prompt: "1ª Chave do Reator: Marie Curie triturou toneladas de uma rocha chamada Pechblenda misturada em água para reter os grãos sólidos insolúveis em um funil com papel poroso. Que método de separação ela usou nessa etapa?",
+                        hint: "Separação de sólido insolúvel + líquido usando papel de filtro!",
+                        options: [
+                            { code: "FILTRACAO_CURIE", label: "Filtração (retém o sólido insolúvel no filtro e deixa o líquido passar)" },
+                            { code: "CATA_MANUAL", label: "Catação com pinça para separar líquidos dissolvidos" },
+                            { code: "DECANTA_GAS", label: "Ventilação com soprador para separar água de sal" }
+                        ],
+                        targetCode: "FILTRACAO_CURIE"
+                    },
+                    {
+                        prompt: "2ª Chave do Reator: Quais foram os dois elementos químicos brilhosos da Tabela Periódica descobertos por Marie Curie (um deles em homenagem ao seu país natal, a Polônia)?",
+                        hint: "Consulte a CAM 01 ou o Grimório do 6º Ano!",
+                        options: [
+                            { code: "PO_RA", label: "Polônio (Po) e Rádio (Ra)" },
+                            { code: "FE_CU", label: "Ferro (Fe) e Cobre (Cu)" },
+                            { code: "HE_NE", label: "Hélio (He) e Neônio (Ne)" }
+                        ],
+                        targetCode: "PO_RA"
+                    },
+                    {
+                        prompt: "3ª Chave Final: Para fechar o circuito elétrico do Reator e vencer o jogo, precisamos escolher um METAL excelente condutor elétrico (símbolo Cu) e refrigerar com uma SUBSTÂNCIA COMPOSTA (H₂O). Qual combinação está correta?",
+                        hint: "Cu é o Cobre (metal avermelhado de fios elétricos) e H₂O é a Água pura (substância composta por Hidrogênio e Oxigênio)!",
+                        options: [
+                            { code: "COBRE_AGUA", label: "Fios de Cobre (Cu - Metal) + Água Pura (H₂O - Substância Composta)" },
+                            { code: "CARVAO_OXIGENIO", label: "Pedra de Enxofre (Não-Metal) + Gás Oxigênio (O₂ - Substância Composta)" },
+                            { code: "AREIA_OLEO", label: "Mistura Homogênea de Água + Óleo + Areia (1 única fase)" }
+                        ],
+                        targetCode: "COBRE_AGUA"
+                    }
+                ]
+            },
+            {
+                id: 6,
+                title: "Custom Night: Pânico na Escola Céam",
+                era: "Noite 6 Personalizada • Todos os 5 Cientistas Atacando Juntos!",
+                topicSummary: "Desafio Supremo Personalizado (IA 0-20) • Todo o Conteúdo do 6º Ano",
+                stalkerName: "Os 5 Cientistas Históricos Simultâneos",
+                stalkerKey: "curie",
+                stalkerBio: "Paracelso, Brand, Lavoisier, Mendeleev e Marie Curie estão ativos simultaneamente de acordo com o nível de IA (0 a 20) que você escolheu!",
+                mechanicDesc: "DESAFIO MISTO DE SOBREVIVÊNCIA: Resolva 3 bancadas sorteadas entre Misturas, Separação e Tabela Periódica enquanto defende os dois lados contra múltiplos cientistas!",
+                phoneGuyScript: "Alerta máximo na Escola Céam! Você ativou a Custom Night do Professor Júlio César! Todos os cientistas estão soltos pelo laboratório ao mesmo tempo! Gerencie a bateria com extremo cuidado e mostre que você é mestre em Ciências do 6º ano!",
+                aggressiveness: 0.75,
+                clues: [
+                    "CAM 01: 'Ouro = Au | Ferro = Fe | Cobre = Cu | Mercúrio = Hg | Oxigênio = O.'",
+                    "CAM 02: 'Água + Sal dissolvido = Homogênea (1 fase), separada por Destilação Simples!'",
+                    "CAM 03: 'Água + Óleo = Heterogênea (2 fases), separada no Funil de Decantação!'",
+                    "CAM 04: 'Substância Simples = 1 elemento (O₂) | Substância Composta = 2 ou mais elementos (H₂O, CO₂).'"
+                ],
+                challenges: [
+                    {
+                        prompt: "1º Desafio Custom Night: Em uma mistura de Água + Areia + Óleo, quantas FASES VISÍVEIS existem e como ela é classificada?",
+                        hint: "Areia no fundo, Água no meio e Óleo no topo!",
+                        options: [
+                            { code: "HET_3", label: "Mistura Heterogênea com 3 fases visíveis" },
+                            { code: "HOM_1", label: "Mistura Homogênea com 1 única fase visível" },
+                            { code: "SIMP_2", label: "Substância Pura Simples com 2 fases" }
+                        ],
+                        targetCode: "HET_3"
+                    },
+                    {
+                        prompt: "2º Desafio Custom Night: Qual sequência apresenta APENAS Substâncias Puras COMPOSTAS (formadas por mais de um elemento químico)?",
+                        hint: "Procure fórmulas que tenham letras maiúsculas de elementos diferentes juntos!",
+                        options: [
+                            { code: "H2O_CO2_NACL", label: "Água (H₂O), Gás Carbônico (CO₂) e Sal de Cozinha (NaCl)" },
+                            { code: "O2_FE_AU", label: "Gás Oxigênio (O₂), Ferro (Fe) e Ouro (Au)" },
+                            { code: "AR_GRANITO", label: "Ar atmosférico, Granito e Água com Óleo" }
+                        ],
+                        targetCode: "H2O_CO2_NACL"
+                    },
+                    {
+                        prompt: "3º Desafio Custom Night: Qual associação entre Método de Separação e Mistura está 100% CORRETA?",
+                        hint: "Pense em como separamos água com sal dissolvido ou ferro na areia!",
+                        options: [
+                            { code: "DEST_SAL", label: "Destilação Simples no Alambique para separar Água e Sal dissolvido" },
+                            { code: "IMA_OLEO", label: "Separação Magnética com ímã para separar Água e Óleo de cozinha" },
+                            { code: "FILTRO_SAL", label: "Filtração comum em papel para tirar o sal dissolvido da água do mar" }
+                        ],
+                        targetCode: "DEST_SAL"
+                    }
+                ]
+            }
+        ];
+
+        const CAMERA_ROOMS = [
+            { id: 0, name: "CAM 01 - Biblioteca Hermética", icon: "fa-book-skull" },
+            { id: 1, name: "CAM 02 - Fornalha Athanor", icon: "fa-fire-burner" },
+            { id: 2, name: "CAM 03 - Galeria de Vidrarias", icon: "fa-vials" },
+            { id: 3, name: "CAM 04 - Câmara de Misturas", icon: "fa-flask-vial" },
+            { id: 4, name: "CAM 05 - Corredor Oeste (Porta Esq)", icon: "fa-door-closed" },
+            { id: 5, name: "CAM 06 - Duto Leste (Válvula Dir)", icon: "fa-fan" }
+        ];
+
+        // ==========================================
+        // 3. ESTADO DO JOGO, RELATÓRIO DO ALUNO & CUSTOM NIGHT IA
+        // ==========================================
+        let unlockedNight = 1;
+        let currentNightIndex = 0;
+        let gameActive = false;
+        let currentView = 'center';
+        let cameraOpen = false;
+        let selectedCam = 0;
+
+        let power = 100.0;
+        let toxicity = 0.0;
+        let clockMinutes = 0;
+        let tasksCompleted = 0;
+
+        let leftDoorClosed = false;
+        let rightVentClosed = false;
+        let leftLightOn = false;
+        let rightLightOn = false;
+
+        let stalkerRoom = 0;
+        let stalkerDoorTimer = 0;
+        let activeStalkerKey = "paracelsus";
+        let activeStalkerName = "Paracelso";
+
+        // Níveis de IA da Custom Night (0 a 20 para cada um dos 5 cientistas)
+        let customAILevels = {
+            paracelsus: 10,
+            brand: 10,
+            lavoisier: 10,
+            mendeleev: 10,
+            curie: 10
+        };
+
+        // Histórico para o Relatório do Professor Júlio César
+        let studentName = "";
+        let studentClass = "6º Ano - Escola Céam";
+        let nightStats = {
+            1: { completed: false, hits: 0, errors: 0 },
+            2: { completed: false, hits: 0, errors: 0 },
+            3: { completed: false, hits: 0, errors: 0 },
+            4: { completed: false, hits: 0, errors: 0 },
+            5: { completed: false, hits: 0, errors: 0 },
+            6: { completed: false, hits: 0, errors: 0 }
+        };
+
+        // Estado das bancadas do 6º Ano
+        let night1Cauldron = [];
+        let night2Class = "COMPOSTA";
+        let night2Count = 2;
+        let night3Method = "IMA";
+        let night4Symbol = "Au";
+        let night4Category = "METAL_SOLIDO";
+
+        let mainLoopInterval = null;
+        let aiLoopInterval = null;
+        let phoneGuyTimeout = null;
+
+        // Áudio Sintetizado
+        let audioInitialized = false;
+        let synthDrone, synthNoise, synthBeep;
+
+        async function initAudio() {
+            if (audioInitialized) return;
+            try {
+                await Tone.start();
+                synthDrone = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sawtooth" },
+                    envelope: { attack: 0.2, decay: 0.4, sustain: 0.3, release: 1.2 }
+                }).toDestination();
+                synthDrone.volume.value = -14;
+
+                synthNoise = new Tone.NoiseSynth({
+                    noise: { type: "brown" },
+                    envelope: { attack: 0.01, decay: 0.25, sustain: 0 }
+                }).toDestination();
+                synthNoise.volume.value = -10;
+
+                synthBeep = new Tone.Synth({
+                    oscillator: { type: "square" },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
+                }).toDestination();
+                synthBeep.volume.value = -12;
+
+                audioInitialized = true;
+            } catch (e) {}
+        }
+
+        function playSound(type) {
+            if (!audioInitialized) return;
+            try {
+                if (type === 'click') synthBeep.triggerAttackRelease("C5", "32n");
+                if (type === 'door') synthNoise.triggerAttackRelease("8n");
+                if (type === 'phone') {
+                    synthBeep.triggerAttackRelease("A4", "16n", Tone.now());
+                    synthBeep.triggerAttackRelease("F4", "16n", Tone.now() + 0.12);
+                }
+                if (type === 'success') {
+                    synthBeep.triggerAttackRelease("E5", "16n", Tone.now());
+                    synthBeep.triggerAttackRelease("G5", "16n", Tone.now() + 0.1);
+                    synthBeep.triggerAttackRelease("C6", "8n", Tone.now() + 0.2);
+                }
+                if (type === 'error') {
+                    synthDrone.triggerAttackRelease(["C2", "F#2"], "4n");
+                }
+                if (type === 'step') {
+                    synthDrone.triggerAttackRelease(["D2", "D#2"], "8n");
+                }
+                if (type === 'jumpscare') {
+                    synthDrone.volume.value = -2;
+                    synthDrone.triggerAttackRelease(["C2", "F#2", "C3", "D#3", "A3"], "1.5n");
+                }
+            } catch (e) {}
+        }
+
+        // ==========================================
+        // 3.1 NARRAÇÃO DE VOZ ASSOMBRADA ("PHONE GUY" ALQUÍMICO)
+        // ==========================================
+        function startPhoneGuyCall(scriptText) {
+            const banner = document.getElementById('phone-guy-banner');
+            const sub = document.getElementById('phone-guy-subtitle');
+            banner.classList.remove('hidden');
+            sub.textContent = `"${scriptText}"`;
+            playSound('phone');
+
+            try {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    const utter = new SpeechSynthesisUtterance(scriptText);
+                    utter.lang = 'pt-BR';
+                    utter.pitch = 0.72; // Voz grave misteriosa estilo Phone Guy
+                    utter.rate = 1.04;
+                    utter.onend = () => {
+                        banner.classList.add('hidden');
+                    };
+                    window.speechSynthesis.speak(utter);
+                }
+            } catch (e) {}
+
+            if (phoneGuyTimeout) clearTimeout(phoneGuyTimeout);
+            phoneGuyTimeout = setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 22000);
+        }
+
+        function mutePhoneGuy() {
+            try {
+                if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            } catch (e) {}
+            if (phoneGuyTimeout) clearTimeout(phoneGuyTimeout);
+            document.getElementById('phone-guy-banner').classList.add('hidden');
+        }
+
+        // ==========================================
+        // 4. INICIALIZAÇÃO DO MENU, CUSTOM NIGHT E RELATÓRIO
+        // ==========================================
+        function saveStudentInfo() {
+            const nameEl = document.getElementById('student-name-input');
+            const classEl = document.getElementById('student-class-input');
+            studentName = nameEl.value.trim();
+            studentClass = classEl.value.trim() || "6º Ano - Escola Céam";
+        }
+
+        function renderMenuNights() {
+            const container = document.getElementById('nights-grid');
+            container.innerHTML = '';
+
+            // Renderiza as 5 Noites principais no grid
+            NIGHTS_DATA.slice(0, 5).forEach((night, idx) => {
+                const stat = nightStats[night.id];
+                const completedBadge = stat.completed
+                    ? `<span class="text-[10px] px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-600 rounded font-bold"><i class="fas fa-check mr-1"></i>CONCLUÍDA</span>`
+                    : `<span class="text-[10px] px-2 py-0.5 bg-amber-950 text-amber-400 border border-amber-700 rounded">NOITE ${night.id}</span>`;
+
+                const card = document.createElement('div');
+                card.className = "bg-stone-900/90 hover:bg-stone-800/90 border-2 border-stone-700 hover:border-amber-500 rounded-xl p-3.5 flex flex-col justify-between transition cursor-pointer group shadow-xl";
+                card.onclick = () => openBriefing(idx);
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            ${completedBadge}
+                            <span class="text-[10px] font-mono-tech text-stone-400">6º ANO</span>
+                        </div>
+                        <div class="w-14 h-14 mx-auto my-1.5 rounded-full bg-black/70 border border-stone-700 p-1">
+                            ${CHARACTER_PORTRAITS[night.stalkerKey]}
+                        </div>
+                        <h3 class="font-alchemy text-sm text-white text-center group-hover:text-amber-400 transition">${night.title}</h3>
+                        <p class="text-[10px] font-mono-tech text-amber-400 text-center mt-0.5">${night.topicSummary}</p>
+                        <p class="text-[11px] text-stone-400 mt-1.5 line-clamp-3 leading-relaxed">${night.mechanicDesc}</p>
+                    </div>
+                    <button class="mt-3 w-full py-1.5 bg-amber-700/20 group-hover:bg-amber-600 text-amber-300 group-hover:text-black font-mono-tech text-xs font-bold uppercase rounded-lg border border-amber-600/50 transition">
+                        Jogar Noite ${night.id}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Modal Custom Night (IA 0 a 20)
+        function openCustomNightModal() {
+            initAudio();
+            playSound('click');
+            const grid = document.getElementById('custom-ai-grid');
+            const chars = [
+                { key: 'paracelsus', name: 'Paracelso', role: 'Alquimia' },
+                { key: 'brand', name: 'H. Brand', role: 'Misturas' },
+                { key: 'lavoisier', name: 'Lavoisier', role: 'Separação' },
+                { key: 'mendeleev', name: 'Mendeleev', role: 'Tab. Periódica' },
+                { key: 'curie', name: 'Marie Curie', role: 'Radioatividade' }
+            ];
+
+            grid.innerHTML = chars.map(c => `
+                <div class="bg-stone-900 border border-stone-700 p-3 rounded-xl flex flex-col items-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-black border border-purple-500/60 p-1 mb-2">
+                        ${CHARACTER_PORTRAITS[c.key]}
+                    </div>
+                    <div class="font-bold text-xs text-white">${c.name}</div>
+                    <div class="text-[10px] font-mono-tech text-purple-400 mb-2">${c.role}</div>
+                    <div class="flex items-center gap-2 mt-auto">
+                        <button onclick="adjustCustomAI('${c.key}', -1)" class="w-7 h-7 bg-stone-800 hover:bg-stone-700 text-white font-bold rounded">-</button>
+                        <span id="ai-val-${c.key}" class="font-mono-tech text-lg font-bold text-amber-400 w-7">${customAILevels[c.key]}</span>
+                        <button onclick="adjustCustomAI('${c.key}', 1)" class="w-7 h-7 bg-stone-800 hover:bg-stone-700 text-white font-bold rounded">+</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('custom-night-modal').classList.remove('hidden');
+        }
+
+        function closeCustomNightModal() {
+            document.getElementById('custom-night-modal').classList.add('hidden');
+        }
+
+        function adjustCustomAI(key, delta) {
+            customAILevels[key] = Math.max(0, Math.min(20, customAILevels[key] + delta));
+            playSound('click');
+            document.getElementById(`ai-val-${key}`).textContent = customAILevels[key];
+        }
+
+        function setAllCustomAI(level) {
+            Object.keys(customAILevels).forEach(k => {
+                customAILevels[k] = level;
+                const el = document.getElementById(`ai-val-${k}`);
+                if (el) el.textContent = level;
+            });
+            playSound('click');
+        }
+
+        function startCustomNight() {
+            closeCustomNightModal();
+            // Calcula agressividade da Custom Night baseada na soma das IAs (0 a 100)
+            const totalAI = Object.values(customAILevels).reduce((a, b) => a + b, 0);
+            NIGHTS_DATA[5].aggressiveness = Math.min(0.92, 0.20 + (totalAI / 100) * 0.72);
+            openBriefing(5);
+        }
+
+        // Modal de Relatório do Aluno para o Prof. Júlio César
+        function openReportModal() {
+            initAudio();
+            playSound('click');
+            saveStudentInfo();
+
+            document.getElementById('rep-student-name').textContent = studentName || "Aluno(a) da Escola Céam";
+            document.getElementById('rep-student-class').textContent = studentClass || "6º Ano - Ensino Fundamental";
+
+            let totalScore = 0;
+            const tbody = document.getElementById('rep-table-body');
+            tbody.innerHTML = '';
+
+            NIGHTS_DATA.forEach(n => {
+                const st = nightStats[n.id];
+                const nightScore = (st.completed ? 200 : 0) + (st.hits * 50) - (st.errors * 15);
+                totalScore += Math.max(0, nightScore);
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-2.5 px-2 font-bold text-white">Noite ${n.id}: ${n.title}</td>
+                    <td class="py-2.5 px-2 text-stone-300">${n.topicSummary}</td>
+                    <td class="py-2.5 px-2">
+                        ${st.completed
+                            ? `<span class="px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-600 rounded">APROVADO (06:00 AM)</span>`
+                            : `<span class="px-2 py-0.5 bg-stone-800 text-stone-400 rounded">Pendente</span>`}
+                    </td>
+                    <td class="py-2.5 px-2">
+                        <span class="text-emerald-400 font-bold">${st.hits} acertos</span> /
+                        <span class="text-red-400">${st.errors} erros</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('rep-total-score').textContent = `${totalScore} pts`;
+            document.getElementById('rep-copy-feedback').classList.add('hidden');
+            document.getElementById('report-modal').classList.remove('hidden');
+        }
+
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+        }
+
+        function copyReportText() {
+            const name = studentName || "Aluno(a) não informado";
+            const score = document.getElementById('rep-total-score').textContent;
+            let lines = [
+                "==========================================",
+                "ESCOLA CÉAM - RELATÓRIO DE CIÊNCIAS (6º ANO)",
+                "Professor: Júlio César",
+                `Aluno(a): ${name} | Turma: ${studentClass}`,
+                `Pontuação Geral: ${score}`,
+                "------------------------------------------"
+            ];
+            NIGHTS_DATA.forEach(n => {
+                const st = nightStats[n.id];
+                lines.push(`Noite ${n.id} (${n.topicSummary}): ${st.completed ? 'CONCLUÍDA' : 'Pendente'} | Acertos: ${st.hits} | Erros: ${st.errors}`);
+            });
+            lines.push("==========================================");
+
+            const temp = document.createElement('textarea');
+            temp.value = lines.join('\n');
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+
+            document.getElementById('rep-copy-feedback').classList.remove('hidden');
+        }
+
+        // Lanterna dinâmica acompanhando o mouse no laboratório
+        document.addEventListener('mousemove', (e) => {
+            const mask = document.getElementById('flashlight-mask');
+            if (!mask || !gameActive) return;
+            const x = e.clientX;
+            const y = e.clientY;
+            mask.style.background = `radial-gradient(circle 280px at ${x}px ${y}px, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.92) 100%)`;
+        });
+
+        // Atalhos de Teclado estilo FNAF
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const grim = document.getElementById('grimoire-modal');
+                if (!grim.classList.contains('hidden')) toggleGrimoire();
+                return;
+            }
+            if (!gameActive) return;
+            const key = e.key.toLowerCase();
+            if (key === 'a' || e.key === 'ArrowLeft') setView('left');
+            if (key === 's' || e.key === 'ArrowDown') {
+                if (cameraOpen) toggleCameraTablet();
+                setView('center');
+            }
+            if (key === 'd' || e.key === 'ArrowRight') setView('right');
+            if (key === 'w' || e.key === ' ') {
+                e.preventDefault();
+                toggleCameraTablet();
+            }
+        });
+
+        function toggleGrimoire() {
+            initAudio();
+            playSound('click');
+            const modal = document.getElementById('grimoire-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        // ==========================================
+        // 5. BRIEFING E INICIALIZAÇÃO DA NOITE
+        // ==========================================
+        function openBriefing(nightIdx) {
+            initAudio();
+            playSound('click');
+            currentNightIndex = nightIdx;
+            const night = NIGHTS_DATA[nightIdx];
+
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('briefing-screen').classList.remove('hidden');
+
+            document.getElementById('briefing-night-badge').textContent = `12:00 AM • ${night.era}`;
+            document.getElementById('briefing-title').textContent = `Noite ${night.id}: ${night.title}`;
+            document.getElementById('briefing-stalker-avatar').innerHTML = CHARACTER_PORTRAITS[night.stalkerKey];
+            document.getElementById('briefing-stalker-name').textContent = night.stalkerName;
+            document.getElementById('briefing-stalker-desc').textContent = night.stalkerBio;
+            document.getElementById('briefing-mechanic-desc').textContent = night.mechanicDesc;
+        }
+
+        function startNightLoop() {
+            initAudio();
+            playSound('door');
+            document.getElementById('briefing-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            const night = NIGHTS_DATA[currentNightIndex];
+            power = 100.0;
+            toxicity = 0.0;
+            clockMinutes = 0;
+            tasksCompleted = 0;
+            leftDoorClosed = false;
+            rightVentClosed = false;
+            leftLightOn = false;
+            rightLightOn = false;
+            cameraOpen = false;
+            selectedCam = 0;
+            stalkerRoom = 0;
+            stalkerDoorTimer = 0;
+            activeStalkerKey = night.stalkerKey;
+            activeStalkerName = night.stalkerName;
+
+            // Configura retratos nos corredores
+            document.getElementById('left-monster-svg').innerHTML = CHARACTER_PORTRAITS[activeStalkerKey];
+            document.getElementById('right-monster-svg').innerHTML = CHARACTER_PORTRAITS[activeStalkerKey];
+            document.getElementById('hud-night-title').textContent = `NOITE ${night.id}: ${night.title.toUpperCase()}`;
+
+            updateDoorVisuals();
+            setView('center');
+            document.getElementById('camera-tablet').classList.add('hidden');
+            loadBenchChallenge();
+            updateHUD();
+
+            gameActive = true;
+
+            // Dispara a chamada gravada do "Phone Guy" Alquímico!
+            if (night.phoneGuyScript) {
+                startPhoneGuyCall(night.phoneGuyScript);
+            }
+
+            if (mainLoopInterval) clearInterval(mainLoopInterval);
+            if (aiLoopInterval) clearInterval(aiLoopInterval);
+
+            // Loop Principal (1 segundo = avança relógio, drena bateria e calcula toxicidade)
+            mainLoopInterval = setInterval(gameTick, 1000);
+            // Loop de IA do Personagem Histórico (a cada 4,5 segundos tenta se mover)
+            aiLoopInterval = setInterval(stalkerAITick, 4500);
+        }
+
+        // ==========================================
+        // 6. MECÂNICA FNAF (PORTAS, LUZES, CÂMERAS E IA)
+        // ==========================================
+        function setView(view) {
+            if (!gameActive) return;
+            playSound('click');
+            currentView = view;
+
+            document.getElementById('view-left').classList.toggle('hidden', view !== 'left');
+            document.getElementById('view-center').classList.toggle('hidden', view !== 'center');
+            document.getElementById('view-right').classList.toggle('hidden', view !== 'right');
+
+            document.getElementById('btn-nav-left').classList.toggle('hidden', view === 'left');
+            document.getElementById('btn-nav-right').classList.toggle('hidden', view === 'right');
+        }
+
+        function toggleLeftDoor() {
+            if (!gameActive || power <= 0) return;
+            leftDoorClosed = !leftDoorClosed;
+            playSound('door');
+            updateDoorVisuals();
+            updateHUD();
+        }
+
+        function toggleRightVent() {
+            if (!gameActive || power <= 0) return;
+            rightVentClosed = !rightVentClosed;
+            playSound('door');
+            updateDoorVisuals();
+            updateHUD();
+        }
+
+        function setCorridorLight(side, state) {
+            if (!gameActive || power <= 0) state = false;
+            if (side === 'left') {
+                leftLightOn = state;
+                const scene = document.getElementById('left-corridor-scene');
+                const monster = document.getElementById('left-monster-figure');
+                scene.style.opacity = state ? '1' : '0.08';
+                monster.classList.toggle('hidden', !(state && stalkerRoom === 4));
+                monster.classList.toggle('flex', state && stalkerRoom === 4);
+            } else {
+                rightLightOn = state;
+                const scene = document.getElementById('right-corridor-scene');
+                const monster = document.getElementById('right-monster-figure');
+                scene.style.opacity = state ? '1' : '0.08';
+                monster.classList.toggle('hidden', !(state && stalkerRoom === 5));
+                monster.classList.toggle('flex', state && stalkerRoom === 5);
+            }
+        }
+
+        function updateDoorVisuals() {
+            // Porta Esquerda
+            const leftShutter = document.getElementById('left-door-shutter');
+            const btnLeft = document.getElementById('btn-door-left');
+            const indLeft = document.getElementById('left-door-indicator');
+
+            if (leftDoorClosed) {
+                leftShutter.classList.remove('-translate-y-full');
+                btnLeft.innerHTML = `<i class="fas fa-lock"></i> <span>PORTA TRANCADA (ABRIR)</span>`;
+                btnLeft.className = "py-4 px-4 rounded-xl font-mono-tech font-bold text-sm uppercase tracking-wider border-2 border-amber-500 bg-amber-600 text-black flex items-center justify-center gap-2 transition shadow-lg";
+                indLeft.className = "w-2.5 h-2.5 rounded-full bg-red-500";
+            } else {
+                leftShutter.classList.add('-translate-y-full');
+                btnLeft.innerHTML = `<i class="fas fa-lock-open"></i> <span>PORTA ABERTA (TRANCAR)</span>`;
+                btnLeft.className = "py-4 px-4 rounded-xl font-mono-tech font-bold text-sm uppercase tracking-wider border-2 border-red-700 bg-red-950/60 hover:bg-red-800 text-red-200 flex items-center justify-center gap-2 transition shadow-lg";
+                indLeft.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+            }
+
+            // Válvula Direita
+            const rightShutter = document.getElementById('right-vent-shutter');
+            const btnRight = document.getElementById('btn-vent-right');
+            const indRight = document.getElementById('right-vent-indicator');
+
+            if (rightVentClosed) {
+                rightShutter.classList.remove('translate-x-full');
+                btnRight.innerHTML = `<i class="fas fa-lock"></i> <span>DUTO SELADO (ABRIR)</span>`;
+                btnRight.className = "py-4 px-4 rounded-xl font-mono-tech font-bold text-sm uppercase tracking-wider border-2 border-emerald-400 bg-emerald-500 text-black flex items-center justify-center gap-2 transition shadow-lg";
+                indRight.className = "w-2.5 h-2.5 rounded-full bg-red-500";
+            } else {
+                rightShutter.classList.add('translate-x-full');
+                btnRight.innerHTML = `<i class="fas fa-door-open"></i> <span>DUTO ABERTO (SELAR)</span>`;
+                btnRight.className = "py-4 px-4 rounded-xl font-mono-tech font-bold text-sm uppercase tracking-wider border-2 border-emerald-700 bg-emerald-950/60 hover:bg-emerald-800 text-emerald-200 flex items-center justify-center gap-2 transition shadow-lg";
+                indRight.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+            }
+        }
+
+        function toggleCameraTablet() {
+            if (!gameActive) return;
+            if (power <= 0 && !cameraOpen) return;
+            cameraOpen = !cameraOpen;
+            playSound('click');
+            document.getElementById('camera-tablet').classList.toggle('hidden', !cameraOpen);
+            if (cameraOpen) renderCameraFeed();
+            updateHUD();
+        }
+
+        function selectCamera(camIdx) {
+            selectedCam = camIdx;
+            playSound('click');
+            document.querySelectorAll('.cam-btn').forEach((btn, idx) => {
+                btn.classList.toggle('border-amber-500', idx === camIdx);
+                btn.classList.toggle('text-white', idx === camIdx);
+                btn.classList.toggle('border-stone-600', idx !== camIdx);
+            });
+            renderCameraFeed();
+        }
+
+        function renderCameraFeed() {
+            const night = NIGHTS_DATA[currentNightIndex];
+            const room = CAMERA_ROOMS[selectedCam];
+            document.getElementById('cam-title').textContent = room.name;
+
+            // Pista científica gravada na parede daquela câmera
+            const clueText = night.clues[selectedCam % night.clues.length];
+            document.getElementById('cam-clue-text').textContent = clueText;
+
+            const roomArt = document.getElementById('cam-room-art');
+            const presenceDiv = document.getElementById('cam-stalker-presence');
+
+            roomArt.innerHTML = `
+                <i class="fas ${room.icon} text-4xl text-stone-700 mb-2"></i>
+                <div class="text-xs font-mono-tech text-stone-500 uppercase">Monitoramento Infravermelho • Setor 0${selectedCam + 1}</div>
+            `;
+
+            if (stalkerRoom === selectedCam) {
+                presenceDiv.innerHTML = `
+                    <div class="flex flex-col items-center animate-pulse">
+                        <div class="w-40 h-40">${CHARACTER_PORTRAITS[activeStalkerKey]}</div>
+                        <span class="mt-2 px-3 py-1 bg-red-950/90 border border-red-500 text-red-300 font-mono-tech text-xs rounded">
+                            ALERTA: ${activeStalkerName.toUpperCase()} DETECTADO NESTA CÂMERA!
+                        </span>
+                    </div>
+                `;
+            } else {
+                presenceDiv.innerHTML = `
+                    <div class="text-xs font-mono-tech text-stone-600 border border-stone-800 px-4 py-6 rounded-xl">
+                        [ NENHUMA ENTIDADE NESTE SETOR NO MOMENTO ]
+                    </div>
+                `;
+            }
+        }
+
+        function triggerCameraFlash() {
+            if (!gameActive || !cameraOpen) return;
+            if (power < 3) return;
+            power = Math.max(0, power - 3);
+            playSound('door');
+
+            if (stalkerRoom === selectedCam && stalkerRoom < 4) {
+                stalkerRoom = Math.max(0, stalkerRoom - 1);
+                renderCameraFeed();
+            }
+            updateHUD();
+        }
+
+        // Inteligência Artificial estilo FNAF (Suporta os 5 cientistas simultâneos na Custom Night!)
+        function stalkerAITick() {
+            if (!gameActive) return;
+            const night = NIGHTS_DATA[currentNightIndex];
+
+            // Na Custom Night (id === 6), sorteia um dos cientistas ativos (IA > 0) para assumir o ataque
+            if (night.id === 6 && stalkerRoom < 4) {
+                const activeKeys = Object.keys(customAILevels).filter(k => customAILevels[k] > 0);
+                if (activeKeys.length > 0) {
+                    activeStalkerKey = activeKeys[Math.floor(Math.random() * activeKeys.length)];
+                    const namesMap = {
+                        paracelsus: "Paracelso",
+                        brand: "Hennig Brand",
+                        lavoisier: "Antoine Lavoisier",
+                        mendeleev: "Dmitri Mendeleev",
+                        curie: "Marie Curie"
+                    };
+                    activeStalkerName = namesMap[activeStalkerKey];
+                    document.getElementById('left-monster-svg').innerHTML = CHARACTER_PORTRAITS[activeStalkerKey];
+                    document.getElementById('right-monster-svg').innerHTML = CHARACTER_PORTRAITS[activeStalkerKey];
+                }
+            }
+
+            // Se já está na porta (4 = Esq, 5 = Dir)
+            if (stalkerRoom === 4 || stalkerRoom === 5) {
+                stalkerDoorTimer++;
+                const isBlocked = (stalkerRoom === 4 && leftDoorClosed) || (stalkerRoom === 5 && rightVentClosed);
+
+                if (isBlocked) {
+                    // Bateu na porta trancada e voltou para o começo!
+                    playSound('door');
+                    stalkerRoom = Math.random() < 0.5 ? 0 : 1;
+                    stalkerDoorTimer = 0;
+                    document.getElementById('danger-alert').classList.add('hidden');
+                    document.getElementById('game-screen').classList.remove('danger-vignette');
+                    if (cameraOpen) renderCameraFeed();
+                    return;
+                }
+
+                // Se a porta continua aberta após 2 ciclos na porta -> JUMPSCARE!
+                if (stalkerDoorTimer >= 2) {
+                    triggerJumpscare(`${activeStalkerName} invadiu o laboratório pelo acesso ${stalkerRoom === 4 ? 'Oeste (Porta Esquerda aberta)' : 'Leste (Duto Direito aberto)'}!`);
+                    return;
+                }
+                return;
+            }
+
+            // Movimentação pelas salas 0 -> 1 -> 2 -> 3 -> (4 ou 5)
+            if (Math.random() < night.aggressiveness) {
+                if (stalkerRoom < 3) {
+                    stalkerRoom++;
+                } else {
+                    // Escolhe atacar pela Porta Esquerda (4) ou Duto Direito (5)
+                    stalkerRoom = Math.random() < 0.5 ? 4 : 5;
+                    stalkerDoorTimer = 0;
+                    playSound('step');
+                    document.getElementById('danger-alert').classList.remove('hidden');
+                    document.getElementById('game-screen').classList.add('danger-vignette');
+                }
+                if (cameraOpen) renderCameraFeed();
+            }
+        }
+
+        // Tick de 1 segundo (Relógio, Energia, Toxicidade)
+        function gameTick() {
+            if (!gameActive) return;
+
+            // Avança o tempo (Cada noite dura ~120s ou termina antes se concluir as 3 sínteses!)
+            clockMinutes += 3;
+            if (clockMinutes >= 360) {
+                if (tasksCompleted >= 3) {
+                    triggerVictory();
+                } else {
+                    triggerJumpscare("O amanhecer chegou (06:00 AM), mas você não concluiu as 3 Sínteses Alquímicas do turno e o reator colapsou!");
+                }
+                return;
+            }
+
+            // Cálculo de consumo de energia da Pilha de Volta
+            let usageLevel = 1;
+            if (leftDoorClosed) usageLevel++;
+            if (rightVentClosed) usageLevel++;
+            if (cameraOpen) usageLevel++;
+            if (leftLightOn || rightLightOn) usageLevel++;
+
+            const powerDrain = usageLevel * 0.28;
+            power = Math.max(0, power - powerDrain);
+
+            // Se acabar a energia, todas as portas abrem!
+            if (power <= 0) {
+                leftDoorClosed = false;
+                rightVentClosed = false;
+                leftLightOn = false;
+                rightLightOn = false;
+                if (cameraOpen) toggleCameraTablet();
+                updateDoorVisuals();
+            }
+
+            // Cálculo de Toxicidade do Ar
+            let toxGain = 0.45 + (currentNightIndex * 0.12);
+            if (rightVentClosed) toxGain += 0.7; // Duto fechado acumula gás!
+            toxicity = Math.min(100, toxicity + toxGain);
+
+            if (toxicity >= 100) {
+                triggerJumpscare("Asfixia Química! A toxicidade do ar atingiu 100%. Use o Exaustor na bancada e não deixe o Duto Leste trancado sem necessidade!");
+                return;
+            }
+
+            updateHUD(usageLevel);
+        }
+
+        function purgeAirToxicity() {
+            if (!gameActive) return;
+            if (power < 4) {
+                setBenchFeedback("Energia insuficiente na Pilha de Volta para acionar o exaustor!", "red");
+                return;
+            }
+            power = Math.max(0, power - 4);
+            toxicity = Math.max(0, toxicity - 45);
+            playSound('door');
+            setBenchFeedback("Exaustor acionado! Gases tóxicos neutralizados com sucesso.", "emerald");
+            updateHUD();
+        }
+
+        function updateHUD(usageLevel = 1) {
+            document.getElementById('hud-power').textContent = `${Math.ceil(power)}%`;
+            document.getElementById('hud-toxicity').textContent = `${Math.floor(toxicity)}%`;
+            const toxBar = document.getElementById('hud-toxicity-bar');
+            toxBar.style.width = `${toxicity}%`;
+            toxBar.className = `h-full transition-all duration-300 ${toxicity > 75 ? 'bg-red-600 animate-pulse' : toxicity > 45 ? 'bg-amber-500' : 'bg-emerald-500'}`;
+
+            document.getElementById('hud-tasks').textContent = `${tasksCompleted} / 3`;
+
+            // Barras de Uso de Energia
+            const barsContainer = document.getElementById('hud-usage-bars');
+            const colors = ['bg-emerald-500', 'bg-emerald-400', 'bg-amber-400', 'bg-red-500'];
+            let barsHTML = `<span class="text-[10px] font-mono-tech text-stone-400 mr-1">USO:</span>`;
+            for (let i = 0; i < 4; i++) {
+                const active = i < usageLevel;
+                barsHTML += `<div class="w-3 h-2 ${active ? colors[Math.min(i, 3)] : 'bg-stone-700'} rounded-sm"></div>`;
+            }
+            barsContainer.innerHTML = barsHTML;
+
+            // Relógio (12:00 AM até 06:00 AM)
+            const hour = Math.floor(clockMinutes / 60);
+            const displayHour = hour === 0 ? 12 : hour;
+            document.getElementById('hud-clock').textContent = `0${displayHour}:00 AM`.replace('012', '12');
+        }
+
+        // ==========================================
+        // 7. MECÂNICAS INTERATIVAS DE BANCADA (ADAPTADAS PARA O 6º ANO ENS. FUNDAMENTAL)
+        // ==========================================
+        function loadBenchChallenge() {
+            const night = NIGHTS_DATA[currentNightIndex];
+            const stepIndex = Math.min(tasksCompleted, 2);
+            const challenge = night.challenges[stepIndex];
+
+            document.getElementById('bench-era-tag').textContent = night.era;
+            document.getElementById('bench-title').textContent = night.title;
+            document.getElementById('bench-step-counter').textContent = `EXPERIMENTO ${stepIndex + 1} DE 3`;
+            document.getElementById('bench-prompt').textContent = challenge.prompt;
+            document.getElementById('bench-hint').textContent = `Dica do Prof. Júlio César: ${challenge.hint}`;
+
+            const area = document.getElementById('bench-interactive-area');
+            area.innerHTML = '';
+
+            // NOITE 1: CALDEIRÃO ALQUÍMICO (4 Elementos + Ingredientes)
+            if (night.id === 1) {
+                night1Cauldron = [];
+                const ingredients = [
+                    { id: "FOGO", label: "▲ Fogo", color: "border-red-600 bg-red-950/50 text-red-300" },
+                    { id: "AGUA", label: "▼ Água", color: "border-blue-600 bg-blue-950/50 text-blue-300" },
+                    { id: "AR", label: "🜁 Ar", color: "border-sky-500 bg-sky-950/50 text-sky-200" },
+                    { id: "TERRA", label: "🜃 Terra", color: "border-emerald-600 bg-emerald-950/50 text-emerald-300" },
+                    { id: "ENXOFRE", label: "🜍 Enxofre", color: "border-amber-500 bg-amber-950/50 text-amber-300" },
+                    { id: "MERCURIO", label: "☿ Mercúrio", color: "border-purple-500 bg-purple-950/50 text-purple-300" },
+                    { id: "SAL", label: "🜔 Sal", color: "border-stone-400 bg-stone-800 text-stone-200" }
+                ];
+
+                area.innerHTML = `
+                    <div class="flex flex-col gap-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                            ${ingredients.map(ing => `
+                                <button onclick="addCauldronIngredient('${ing.id}')" class="p-2.5 rounded-xl border ${ing.color} hover:scale-105 transition font-mono-tech text-xs font-bold">
+                                    ${ing.label}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div class="flex items-center justify-between bg-black/80 border border-amber-700/50 p-3 rounded-xl">
+                            <div class="text-xs font-mono-tech">
+                                <span class="text-stone-400">CADINHO ATUAL (3 INGREDIENTES):</span>
+                                <span id="cauldron-slots" class="ml-2 text-amber-400 font-bold">[ Vazio ]</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="clearCauldron()" class="px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded font-mono-tech text-xs">Limpar</button>
+                                <button onclick="verifyBenchAction()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-black font-bold rounded font-mono-tech text-xs uppercase">Misturar no Caldeirão!</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // NOITE 2: SUBSTÂNCIAS SIMPLES/COMPOSTAS & MISTURAS HOMOGÊNEAS/HETEROGÊNEAS (6º ANO)
+            else if (night.id === 2) {
+                night2Class = "COMPOSTA";
+                night2Count = 1;
+                const classes = [
+                    { id: "SIMPLES", label: "Substância Pura SIMPLES", sub: "1 único elemento" },
+                    { id: "COMPOSTA", label: "Substância Pura COMPOSTA", sub: "2 ou mais elementos" },
+                    { id: "HOMOGENEA", label: "Mistura HOMOGÊNEA", sub: "1 única fase visível" },
+                    { id: "HETEROGENEA", label: "Mistura HETEROGÊNEA", sub: "2 ou mais fases visíveis" }
+                ];
+                area.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                        <div class="grid grid-cols-2 gap-2">
+                            ${classes.map(c => `
+                                <button onclick="selectNight2Class('${c.id}')" id="n2-cls-${c.id}" class="n2-cls p-2.5 rounded-xl border-2 ${c.id === 'COMPOSTA' ? 'border-amber-500 bg-amber-950/40 text-white' : 'border-stone-700 bg-stone-900 text-stone-300'} text-left font-mono-tech text-xs transition">
+                                    <strong class="block text-amber-400">${c.label}</strong>
+                                    <span class="text-[10px] text-stone-400">${c.sub}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                        <div class="bg-black/75 border border-stone-700 p-4 rounded-xl flex flex-col gap-3">
+                            <div class="text-xs font-mono-tech text-stone-300">${challenge.countLabel}</div>
+                            <div class="flex items-center justify-center gap-4">
+                                <button onclick="changeNight2Count(-1)" class="w-9 h-9 bg-stone-800 hover:bg-stone-700 rounded-lg text-white font-bold text-lg">-</button>
+                                <span id="n2-count-val" class="font-mono-tech text-2xl font-bold text-amber-400">1</span>
+                                <button onclick="changeNight2Count(1)" class="w-9 h-9 bg-stone-800 hover:bg-stone-700 rounded-lg text-white font-bold text-lg">+</button>
+                            </div>
+                            <button onclick="verifyBenchAction()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-black font-bold font-mono-tech text-xs uppercase rounded-lg">
+                                Confirmar Análise do Frasco
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // NOITE 3: OFICINA DE SEPARAÇÃO DE MISTURAS (6º ANO)
+            else if (night.id === 3) {
+                night3Method = "IMA";
+                const methods = [
+                    { id: "IMA", name: "Separação Magnética (Ímã)", desc: "Atrai ferro metálico da areia", icon: "fa-magnet" },
+                    { id: "FILTRACAO", name: "Filtração com Filtro de Papel", desc: "Retém sólido insolúvel (areia/pó) da água", icon: "fa-filter" },
+                    { id: "DECANTACAO", name: "Funil de Decantação", desc: "Separa líquidos que não se misturam (água e óleo)", icon: "fa-flask" },
+                    { id: "DESTILACAO", name: "Alambique de Destilação Simples", desc: "Ferve água salgada para separar Água e Sal", icon: "fa-fire-burner" }
+                ];
+                area.innerHTML = `
+                    <div class="flex flex-col gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                            ${methods.map(m => `
+                                <button onclick="selectNight3Method('${m.id}')" id="n3-met-${m.id}" class="n3-met p-3 rounded-xl border-2 ${m.id === 'IMA' ? 'border-amber-500 bg-amber-950/50 text-white' : 'border-stone-700 bg-stone-900 text-stone-300'} text-left font-mono-tech text-xs transition">
+                                    <i class="fas ${m.icon} text-lg text-amber-400 mb-1 block"></i>
+                                    <strong class="block">${m.name}</strong>
+                                    <span class="text-[10px] text-stone-400">${m.desc}</span>
+                                </button>
+                            `).join('')}
+                        </div>
+                        <button onclick="verifyBenchAction()" class="w-full py-2.5 bg-amber-600 hover:bg-amber-500 text-black font-bold font-mono-tech text-xs uppercase rounded-xl">
+                            <i class="fas fa-cogs mr-1"></i> Acionar Aparelho de Separação de Misturas
+                        </button>
+                    </div>
+                `;
+            }
+
+            // NOITE 4: TABELA PERIÓDICA DOS ELEMENTOS (6º ANO)
+            else if (night.id === 4) {
+                night4Symbol = "Au";
+                const elements = [
+                    { sym: "Au", name: "Ouro" },
+                    { sym: "Fe", name: "Ferro" },
+                    { sym: "Cu", name: "Cobre" },
+                    { sym: "Hg", name: "Mercúrio" },
+                    { sym: "O", name: "Oxigênio" },
+                    { sym: "C", name: "Carbono" }
+                ];
+                area.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                        <div>
+                            <label class="text-[11px] font-mono-tech text-stone-400 uppercase block mb-1.5">1. Escolha o Símbolo na Tabela Periódica:</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                ${elements.map(m => `
+                                    <button onclick="selectNight4Symbol('${m.sym}')" id="sym-${m.sym}" class="n4-sym p-2 rounded-lg border ${m.sym === 'Au' ? 'border-amber-500 bg-amber-950/50 text-white' : 'border-stone-700 bg-stone-900 text-stone-400'} font-mono-tech text-xs">
+                                        <strong class="block text-base text-amber-400">${m.sym}</strong> ${m.name}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="bg-black/70 border border-stone-700 p-4 rounded-xl flex flex-col gap-3">
+                            <label class="text-xs font-mono-tech text-stone-300">2. Qual a propriedade desse Elemento Químico?</label>
+                            <select id="n4-cat-select" class="bg-stone-900 border border-amber-600 text-white font-mono-tech text-xs p-2.5 rounded-lg">
+                                <option value="METAL_SOLIDO">Metal Sólido Brilhante (Conduz calor/eletricidade)</option>
+                                <option value="METAL_LIQUIDO">Único Metal Líquido em Temperatura Ambiente</option>
+                                <option value="GAS_NAO_METAL">Gás Não-Metal (Essencial para a respiração)</option>
+                            </select>
+                            <button onclick="verifyBenchAction()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-black font-bold font-mono-tech text-xs uppercase rounded-lg">
+                                Destravar Cofre de Mendeleev
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // NOITES 5 e 6 (CUSTOM NIGHT): CHAVES CIENTÍFICAS DE MARIE CURIE E REVISÃO GERAL
+            else if (night.id === 5 || night.id === 6) {
+                area.innerHTML = `
+                    <div class="grid grid-cols-1 gap-2.5">
+                        ${challenge.options.map(opt => `
+                            <button onclick="verifyNight5Option('${opt.code}')" class="p-3 bg-stone-950 hover:bg-emerald-950/60 border border-stone-700 hover:border-emerald-500 rounded-xl text-left font-mono-tech text-xs text-stone-200 flex items-center justify-between transition">
+                                <span><i class="fas fa-atom text-emerald-400 mr-2"></i>${opt.label}</span>
+                                <span class="px-2 py-0.5 bg-emerald-900/50 text-emerald-300 rounded text-[10px]">ACIONAR CHAVE</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        // Funções Auxiliares das Bancadas do 6º Ano
+        function addCauldronIngredient(id) {
+            if (night1Cauldron.length >= 3) night1Cauldron = [];
+            night1Cauldron.push(id);
+            playSound('click');
+            document.getElementById('cauldron-slots').textContent = night1Cauldron.join(' + ');
+        }
+
+        function clearCauldron() {
+            night1Cauldron = [];
+            playSound('click');
+            document.getElementById('cauldron-slots').textContent = '[ Vazio ]';
+        }
+
+        function selectNight2Class(cls) {
+            night2Class = cls;
+            playSound('click');
+            document.querySelectorAll('.n2-cls').forEach(btn => {
+                btn.className = "n2-cls p-2.5 rounded-xl border-2 border-stone-700 bg-stone-900 text-stone-300 text-left font-mono-tech text-xs transition";
+            });
+            document.getElementById(`n2-cls-${cls}`).className = "n2-cls p-2.5 rounded-xl border-2 border-amber-500 bg-amber-950/40 text-white text-left font-mono-tech text-xs transition";
+        }
+
+        function changeNight2Count(delta) {
+            night2Count = Math.max(1, Math.min(5, night2Count + delta));
+            playSound('click');
+            document.getElementById('n2-count-val').textContent = night2Count;
+        }
+
+        function selectNight3Method(met) {
+            night3Method = met;
+            playSound('click');
+            document.querySelectorAll('.n3-met').forEach(btn => {
+                btn.className = "n3-met p-3 rounded-xl border-2 border-stone-700 bg-stone-900 text-stone-300 text-left font-mono-tech text-xs transition";
+            });
+            document.getElementById(`n3-met-${met}`).className = "n3-met p-3 rounded-xl border-2 border-amber-500 bg-amber-950/50 text-white text-left font-mono-tech text-xs transition";
+        }
+
+        function selectNight4Symbol(sym) {
+            night4Symbol = sym;
+            playSound('click');
+            document.querySelectorAll('.n4-sym').forEach(btn => {
+                btn.className = "n4-sym p-2 rounded-lg border border-stone-700 bg-stone-900 text-stone-400 font-mono-tech text-xs";
+            });
+            document.getElementById(`sym-${sym}`).className = "n4-sym p-2 rounded-lg border border-amber-500 bg-amber-950/50 text-white font-mono-tech text-xs";
+        }
+
+        function verifyNight5Option(code) {
+            const challenge = NIGHTS_DATA[currentNightIndex].challenges[tasksCompleted];
+            handleBenchResult(code === challenge.targetCode);
+        }
+
+        function verifyBenchAction() {
+            const night = NIGHTS_DATA[currentNightIndex];
+            const challenge = night.challenges[tasksCompleted];
+            let isCorrect = false;
+
+            if (night.id === 1) {
+                isCorrect = JSON.stringify(night1Cauldron) === JSON.stringify(challenge.targetRecipe);
+            } else if (night.id === 2) {
+                isCorrect = (night2Class === challenge.targetClass && night2Count === challenge.targetCount);
+            } else if (night.id === 3) {
+                isCorrect = (night3Method === challenge.targetMethod);
+            } else if (night.id === 4) {
+                const selectedCat = document.getElementById('n4-cat-select').value;
+                isCorrect = (night4Symbol === challenge.targetSymbol && selectedCat === challenge.targetCategory);
+            }
+
+            handleBenchResult(isCorrect);
+        }
+
+        function handleBenchResult(isCorrect) {
+            const night = NIGHTS_DATA[currentNightIndex];
+            if (isCorrect) {
+                playSound('success');
+                tasksCompleted++;
+                nightStats[night.id].hits++;
+                toxicity = Math.max(0, toxicity - 15);
+                // Concluir um experimento avança o relógio rumo às 06:00 AM!
+                clockMinutes = Math.min(360, clockMinutes + 95);
+
+                if (tasksCompleted >= 3) {
+                    triggerVictory();
+                    return;
+                }
+
+                setBenchFeedback("EXPERIMENTO CORRETO! O reator estabilizou e o relógio avançou!", "emerald");
+                loadBenchChallenge();
+                updateHUD();
+            } else {
+                playSound('error');
+                nightStats[night.id].errors++;
+                toxicity = Math.min(100, toxicity + 18);
+                setBenchFeedback("ERRO EXPERIMENTAL! Mistura instável liberou gás (+18% Toxicidade) e atraiu o cientista!", "red");
+                // Erro faz o cientista avançar uma sala imediatamente!
+                if (stalkerRoom < 3) stalkerRoom++;
+                updateHUD();
+            }
+        }
+
+        function setBenchFeedback(msg, color) {
+            const el = document.getElementById('bench-feedback');
+            el.textContent = msg;
+            el.className = `text-center font-mono-tech text-xs h-5 ${
+                color === 'emerald' ? 'text-emerald-400 font-bold' :
+                color === 'red' ? 'text-red-400 font-bold' : 'text-amber-300'
+            }`;
+        }
+
+        // ==========================================
+        // 8. FIM DE JOGO (JUMPSCARE & VITÓRIA 06:00 AM)
+        // ==========================================
+        function triggerJumpscare(reason) {
+            gameActive = false;
+            mutePhoneGuy();
+            clearInterval(mainLoopInterval);
+            clearInterval(aiLoopInterval);
+            playSound('jumpscare');
+
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('jumpscare-screen').classList.remove('hidden');
+            document.getElementById('jumpscare-figure').innerHTML = CHARACTER_PORTRAITS[activeStalkerKey];
+            document.getElementById('gameover-reason').textContent = reason;
+        }
+
+        function triggerVictory() {
+            gameActive = false;
+            mutePhoneGuy();
+            clearInterval(mainLoopInterval);
+            clearInterval(aiLoopInterval);
+            playSound('success');
+
+            const night = NIGHTS_DATA[currentNightIndex];
+            nightStats[night.id].completed = true;
+            if (unlockedNight <= night.id && night.id < 5) {
+                unlockedNight = night.id + 1;
+            }
+
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('victory-screen').classList.remove('hidden');
+
+            document.getElementById('victory-title').textContent = `Noite ${night.id} Concluída: ${night.title}!`;
+            document.getElementById('victory-desc').textContent =
+                night.id < 5
+                    ? `Excelente trabalho, estudante da Escola Céam! Você dominou "${night.topicSummary}" e sobreviveu até as 06:00 AM!`
+                    : `PARABÉNS! Você venceu o desafio supremo de Ciências do 6º Ano do Prof. Júlio César! Clique em 'Ver Relatório do Professor' para salvar seu certificado!`;
+
+            const btnNext = document.getElementById('btn-next-night');
+            btnNext.classList.toggle('hidden', night.id >= 5);
+        }
+
+        function retryCurrentNight() {
+            document.getElementById('jumpscare-screen').classList.add('hidden');
+            openBriefing(currentNightIndex);
+        }
+
+        function goToNextNight() {
+            document.getElementById('victory-screen').classList.add('hidden');
+            if (currentNightIndex + 1 < NIGHTS_DATA.length) {
+                openBriefing(currentNightIndex + 1);
+            } else {
+                returnToMenu();
+            }
+        }
+
+        function returnToMenu() {
+            gameActive = false;
+            mutePhoneGuy();
+            clearInterval(mainLoopInterval);
+            clearInterval(aiLoopInterval);
+            document.getElementById('jumpscare-screen').classList.add('hidden');
+            document.getElementById('victory-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('briefing-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+            renderMenuNights();
+        }
+
+        window.onload = function () {
+            renderMenuNights();
+        };
+    </script>
+</body>
+</html>
